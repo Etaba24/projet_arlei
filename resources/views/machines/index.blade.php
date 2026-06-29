@@ -1,0 +1,199 @@
+<x-app-layout>
+    <div class="space-y-6">
+        
+        <x-slot name="header">
+            <div class="flex flex-col md:flex-row md:items-center w-full gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Gestion des Machines</h1>
+                    <p class="text-sm text-slate-500 mt-1">Supervision de l'état opérationnel du parc de machines industrielles.</p>
+                </div>
+                <form method="GET" action="{{ route('machines.index') }}" class="relative w-full md:w-80 ml-0 md:ml-8">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Rechercher une machine..."
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                    </svg>
+                </form>
+                <div class="ml-auto">
+                    <label for="modal-create-toggle" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer group">
+                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nouvelle Machine
+                    </label>
+                </div>
+            </div>
+        </x-slot>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-emerald-600">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Code</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Désignation</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">État</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        @forelse ($machines as $machine)
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="px-6 py-4 font-mono text-xs font-bold text-slate-400">{{ $machine->code }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-900 capitalize">{{ $machine->designation }}</td>
+                                <td class="px-6 py-4">
+                                    @if($machine->etat === 'en_marche')
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            En marche
+                                        </span>
+                                    @elseif($machine->etat === 'arret')
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-300">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                            À l'arrêt
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            En panne
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <label for="edit-toggle-{{ $machine->code }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        
+                                    </label>
+                                    <form action="{{ route('machines.destroy', $machine->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            
+                                        </button>
+                                    </form>
+                                    <input type="checkbox" id="edit-toggle-{{ $machine->code }}" class="peer hidden" />
+                                    <div class="fixed inset-0 z-[60] hidden peer-checked:flex items-center justify-center p-4 text-left font-normal normal-case">
+                                        <label for="edit-toggle-{{ $machine->code }}" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer animate-fade-in"></label>
+                                        
+                                        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-modal-pop">
+                                            <div class="p-8">
+                                                <div class="flex items-center justify-between mb-8">
+                                                    <div>
+                                                        <h3 class="text-xl font-bold text-slate-900">Modifier la Machine</h3>
+                                                        <p class="text-sm text-slate-500 mt-1">Édition de la machine <span class="font-mono text-emerald-600 font-bold">{{ $machine->code }}</span></p>
+                                                    </div>
+                                                    <label for="edit-toggle-{{ $machine->code }}" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer text-slate-400 transition-colors">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </label>
+                                                </div>
+
+                                                <form action="{{ route('machines.update', $machine->id) }}" method="POST" class="space-y-6">
+                                                    @csrf
+                                                    @method('PUT')
+
+                                                    <div class="space-y-4">
+                                                        <div>
+                                                            <label class="block text-sm font-bold text-slate-700 mb-2">Code Identifiant</label>
+                                                            <input type="text" disabled class="w-full rounded-2xl border-slate-200 bg-slate-50 text-slate-500 font-mono text-sm shadow-sm px-4 py-3 cursor-not-allowed select-none" value="{{ $machine->code }}" />
+                                                        </div>
+
+                                                        <div>
+                                                            <label for="designation-{{ $machine->code }}" class="block text-sm font-bold text-slate-700 mb-2">Désignation <span class="text-rose-500">*</span></label>
+                                                            <input type="text" name="designation" id="designation-{{ $machine->code }}" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900" value="{{ $machine->designation }}" />
+                                                        </div>
+
+                                                        <div>
+                                                            <label for="etat-{{ $machine->code }}" class="block text-sm font-bold text-slate-700 mb-2">État de fonctionnement <span class="text-rose-500">*</span></label>
+                                                            <select name="etat" id="etat-{{ $machine->code }}" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900">
+                                                                <option value="en_marche" {{ $machine->etat == 'en_marche' ? 'selected' : '' }}>En marche / Prête</option>
+                                                                <option value="arret" {{ $machine->etat == 'arret' ? 'selected' : '' }}>À l'arrêt</option>
+                                                                <option value="en_panne" {{ $machine->etat == 'en_panne' ? 'selected' : '' }}>En panne (Maintenance)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex gap-3 pt-4">
+                                                        <label for="edit-toggle-{{ $machine->code }}" class="flex-1 px-6 py-3 border border-slate-200 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 transition-all cursor-pointer text-center">
+                                                            Annuler
+                                                        </label>
+                                                        <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all">
+                                                            Enregistrer
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="py-12 text-center text-slate-400 font-medium italic">Aucune machine enregistrée pour l'instant.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($machines->hasPages())
+                <div class="px-6 py-4 border-t border-slate-100">
+                    {{ $machines->links() }}
+                </div>
+            @endif
+        </div>
+
+        <input type="checkbox" id="modal-create-toggle" class="peer hidden" {{ $errors->any() ? 'checked' : '' }} />
+        <div class="fixed inset-0 z-[60] hidden peer-checked:flex items-center justify-center p-4">
+            <label for="modal-create-toggle" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer animate-fade-in"></label>
+            
+            <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-modal-pop">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Ajouter une Machine</h3>
+                            <p class="text-sm text-slate-500 mt-1">Enregistrez un nouvel équipement dans le parc machine.</p>
+                        </div>
+                        <label for="modal-create-toggle" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer text-slate-400 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </label>
+                    </div>
+
+                    <form action="{{ route('machines.store') }}" method="POST" class="space-y-6">
+                        @csrf
+                        @if($errors->any())
+                            <div class="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm font-semibold text-rose-700">
+                                {{ $errors->first() }}
+                            </div>
+                        @endif
+                        <div class="space-y-4">
+                            <div>
+                                <label for="create-designation" class="block text-sm font-bold text-slate-700 mb-2">Nom / Désignation de la machine <span class="text-rose-500">*</span></label>
+                                <input type="text" name="designation" id="create-designation" required placeholder="ex: Broyeuse B-400, Four de Séchage F1..." class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ old('designation') }}" />
+                            </div>
+
+                            <div>
+                                <label for="create-etat" class="block text-sm font-bold text-slate-700 mb-2">État de fonctionnement initial <span class="text-rose-500">*</span></label>
+                                <select name="etat" id="create-etat" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                    <option value="en_marche">En marche / Prête</option>
+                                    <option value="arret">À l'arrêt</option>
+                                    <option value="en_panne">En panne (Maintenance)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 pt-4">
+                            <label for="modal-create-toggle" class="flex-1 px-6 py-3 border border-slate-200 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 transition-all cursor-pointer text-center">
+                                Annuler
+                            </label>
+                            <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all">
+                                Ajouter la machine
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</x-app-layout>
