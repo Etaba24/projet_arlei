@@ -48,7 +48,7 @@
 
         {{-- ── STATS ── --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 transition-colors">
                 <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 </div>
@@ -57,7 +57,7 @@
                     <p class="text-xs text-slate-400 font-semibold">Rôles au total</p>
                 </div>
             </div>
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+            <div class="bg-violet-50 border border-violet-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 transition-colors">
                 <div class="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 </div>
@@ -66,7 +66,7 @@
                     <p class="text-xs text-slate-400 font-semibold">Rôles personnalisés</p>
                 </div>
             </div>
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 transition-colors">
                 <div class="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                 </div>
@@ -75,7 +75,7 @@
                     <p class="text-xs text-slate-400 font-semibold">Permissions disponibles</p>
                 </div>
             </div>
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex items-center gap-4">
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 transition-colors">
                 <div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </div>
@@ -96,8 +96,8 @@
                 $popupId      = 'popup-role-' . $role->id;
             @endphp
 
-            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-
+            <div class="card-tinted border-2 rounded-2xl shadow-sm overflow-hidden transition-colors"
+                 style="--tint-color: {{ $role->couleur }}; border-color: {{ $role->couleur }}40;">
                 {{-- ── Bande colorée en haut ── --}}
                 <div class="h-2 w-full" style="background-color: {{ $role->couleur }}"></div>
 
@@ -151,7 +151,7 @@
                             {{-- Delete --}}
                             @if(!$role->is_system)
                             <form action="{{ route('roles.destroy', $role) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer le rôle « {{ $role->name }} » ?')">
+                                  onsubmit="confirmDelete(event, this)">
                                 @csrf @method('DELETE')
                                 <button type="submit" title="Supprimer"
                                         class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
@@ -193,14 +193,14 @@
                     <div class="flex flex-wrap gap-2 mt-5">
                         @foreach($permissions as $groupe => $perms)
                             @php
-                                $gc = $groupColors[$groupe] ?? ['dot'=>'bg-slate-400','text'=>'text-slate-600','badge'=>'bg-slate-100'];
                                 $count = $perms->filter(fn($p) => $permSlugs->contains($p->slug))->count();
                             @endphp
                             @if($count > 0)
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold {{ $gc['badge'] }} {{ $gc['text'] }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $gc['dot'] }}"></span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors"
+                                  style="background-color: {{ $role->couleur }}15; color: {{ $role->couleur }}; border-color: {{ $role->couleur }}30;">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background-color: {{ $role->couleur }}"></span>
                                 {{ $groupe }}
-                                <span class="font-black">{{ $count }}</span>
+                                <span class="font-black opacity-80">{{ $count }}</span>
                             </span>
                             @endif
                         @endforeach

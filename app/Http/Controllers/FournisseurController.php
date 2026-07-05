@@ -22,7 +22,7 @@ class FournisseurController extends Controller
             });
         }
 
-        $fournisseurs = $query->orderBy('code')->paginate(10)->withQueryString();
+        $fournisseurs = $query->orderBy('code')->paginate(7)->withQueryString();
         $totalCount = Fournisseur::count();
 
         return view('fournisseurs.index', compact('fournisseurs', 'totalCount'));

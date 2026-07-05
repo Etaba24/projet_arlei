@@ -26,7 +26,7 @@ class UserController extends Controller
             $query->where('role', $role);
         }
 
-        $users = $query->with('customRole')->orderBy('name')->paginate(10)->withQueryString();
+        $users = $query->with('customRole')->orderBy('name')->paginate(7)->withQueryString();
         $totalCount = User::count();
         $roles = Role::orderBy('name')->get();
 

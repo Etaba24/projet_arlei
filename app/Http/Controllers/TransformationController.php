@@ -19,7 +19,7 @@ class TransformationController extends Controller
             });
         }
 
-        $transformations = $query->orderBy('code')->paginate(10)->withQueryString();
+        $transformations = $query->orderBy('code')->paginate(7)->withQueryString();
         $totalCount = Transformation::count();
 
         return view('transformations.index', compact('transformations', 'totalCount'));

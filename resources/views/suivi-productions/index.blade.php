@@ -1,32 +1,40 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Suivi de Production</h1>
-            <p class="text-sm text-slate-500 mt-1">Tableau de bord temps réel des ordres de production et pilotage des phases.</p>
+        <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Suivi de Production</h1>
+                <p class="text-sm text-slate-500 mt-1">Tableau de bord temps réel des ordres de production et pilotage des phases.</p>
+            </div>
+            <div class="flex gap-2 w-full md:w-auto mt-3 md:mt-0">
+                <a href="{{ request()->fullUrlWithQuery(['print' => 'true']) }}" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 shadow-sm transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Imprimer
+                </a>
+            </div>
         </div>
     </x-slot>
 
     <div class="space-y-8">
         <!-- Statistiques des phases -->
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
-            <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Productions Actives</p>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm p-4 transition-colors">
+                <p class="text-xs font-semibold text-emerald-700 uppercase">Productions Actives</p>
                 <p class="text-3xl font-bold text-emerald-600 mt-2">{{ $totalActives }}</p>
             </div>
-            <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Phases en Attente</p>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl shadow-sm p-4 transition-colors">
+                <p class="text-xs font-semibold text-slate-700 uppercase">Phases en Attente</p>
                 <p class="text-3xl font-bold text-slate-600 mt-2">{{ $phasesEnAttente }}</p>
             </div>
-            <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Phases en Cours</p>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-4 transition-colors">
+                <p class="text-xs font-semibold text-amber-700 uppercase">Phases en Cours</p>
                 <p class="text-3xl font-bold text-amber-600 mt-2">{{ $phasesEnCours }}</p>
             </div>
-            <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase">À Valider</p>
+            <div class="bg-orange-50 border border-orange-200 rounded-xl shadow-sm p-4 transition-colors">
+                <p class="text-xs font-semibold text-orange-700 uppercase">À Valider</p>
                 <p class="text-3xl font-bold text-orange-600 mt-2">{{ $phasesTerminees }}</p>
             </div>
-            <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4">
-                <p class="text-xs font-semibold text-slate-500 uppercase">Validées</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl shadow-sm p-4 transition-colors">
+                <p class="text-xs font-semibold text-blue-700 uppercase">Validées</p>
                 <p class="text-3xl font-bold text-blue-600 mt-2">{{ $phasesValidees }}</p>
             </div>
         </div>
@@ -163,7 +171,7 @@
         <!-- Productions CLÔTURÉES (Historique) -->
         <div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200 px-6 py-4">
-                <h2 class="text-xl font-bold text-slate-900">✓ Productions Clôturées (Dernières 10)</h2>
+                <h2 class="text-xl font-bold text-slate-900">✓ Productions Clôturées (Dernières 7)</h2>
             </div>
 
             @if ($opsTerminees->isNotEmpty())

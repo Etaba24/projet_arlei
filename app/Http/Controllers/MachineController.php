@@ -23,7 +23,7 @@ class MachineController extends Controller
             $query->where('etat', $etat);
         }
 
-        $machines = $query->orderBy('code')->paginate(10)->withQueryString();
+        $machines = $query->orderBy('code')->paginate(7)->withQueryString();
         $totalCount = Machine::count();
 
         return view('machines.index', compact('machines', 'totalCount'));

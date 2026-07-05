@@ -34,7 +34,7 @@ class OrdreProductionController extends Controller
             $query->where('statut', $statut);
         }
 
-        $ops        = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $ops        = $query->orderBy('created_at', 'desc')->paginate(request('print') == 'true' ? 1000 : 7)->withQueryString();
         $totalCount = OrdreProduction::count();
 
         return view('ordre-productions.index', compact('ops', 'totalCount'));
@@ -486,7 +486,7 @@ class OrdreProductionController extends Controller
 
         $opsTerminees = OrdreProduction::where('statut', 'termine')
             ->with(['produitFini', 'matierePremiere', 'employe'])
-            ->orderBy('created_at', 'desc')->limit(10)->get();
+            ->orderBy('created_at', 'desc')->limit(7)->get();
 
         $totalActives    = $opsActives->count();
         $totalTerminees  = OrdreProduction::where('statut', 'termine')->count();

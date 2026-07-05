@@ -20,7 +20,7 @@ class ProduitSemiFiniController extends Controller
             });
         }
 
-        $produits = $query->orderBy('code')->paginate(10)->withQueryString();
+        $produits = $query->orderBy('code')->paginate(7)->withQueryString();
 
         $totalCount = ProduitSemiFini::count();
         $qteEnStock = ProduitSemiFini::sum('qte_en_stock');

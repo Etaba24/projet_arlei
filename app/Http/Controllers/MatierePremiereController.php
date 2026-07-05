@@ -33,7 +33,7 @@ class MatierePremiereController extends Controller
             $query->where('unite_mesure', $unite);
         }
 
-        $matieres = $query->orderBy('code')->paginate(10)->withQueryString();
+        $matieres = $query->orderBy('code')->paginate(request('print') == 'true' ? 1000 : 7)->withQueryString();
         $totalCount = MatierePremiere::count();
         $unites = UniteMesure::orderBy('libelle')->get();
 

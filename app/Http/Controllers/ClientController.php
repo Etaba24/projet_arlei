@@ -23,7 +23,7 @@ class ClientController extends Controller
             });
         }
 
-        $clients = $query->orderBy('code')->paginate(10)->withQueryString();
+        $clients = $query->orderBy('code')->paginate(7)->withQueryString();
         $totalCount = Client::count();
 
         return view('clients.index', compact('clients', 'totalCount'));

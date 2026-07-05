@@ -82,19 +82,53 @@
 
             /* ── Toutes les cartes (bg-white, rounded panels) ── */
             [data-theme="dark"] .bg-white,
-            [data-theme="dark"] [class*="bg-white"] {
+            [data-theme="dark"] [class*="bg-white/"] {
                 background-color: var(--dk-surface) !important;
+            }
+
+            /* ── Dégradés clairs ── */
+            [data-theme="dark"] [class*="from-emerald-50"],
+            [data-theme="dark"] [class*="to-teal-50"],
+            [data-theme="dark"] [class*="from-blue-50"],
+            [data-theme="dark"] [class*="to-indigo-50"] {
+                --tw-gradient-from: var(--dk-raised) !important;
+                --tw-gradient-to: var(--dk-raised) !important;
+                --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+                background-color: var(--dk-raised) !important;
             }
 
             /* ── Niveaux gris clair → surface légèrement surélevée ── */
             [data-theme="dark"] .bg-slate-50,
-            [data-theme="dark"] [class*="bg-slate-50"] {
+            [data-theme="dark"] .bg-orange-50 {
                 background-color: var(--dk-raised) !important;
             }
-            [data-theme="dark"] .bg-slate-100,
-            [data-theme="dark"] [class*="bg-slate-100"] {
+            [data-theme="dark"] .bg-slate-100 {
                 background-color: var(--dk-raised) !important;
             }
+
+            /* ── Couleurs sémantiques teintées pour le thème sombre ── */
+            [data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.1) !important; border-color: rgba(16, 185, 129, 0.2) !important; }
+            [data-theme="dark"] .bg-blue-50    { background-color: rgba(59, 130, 246, 0.1) !important; border-color: rgba(59, 130, 246, 0.2) !important; }
+            [data-theme="dark"] .bg-amber-50   { background-color: rgba(245, 158, 11, 0.1) !important; border-color: rgba(245, 158, 11, 0.2) !important; }
+            [data-theme="dark"] .bg-violet-50  { background-color: rgba(139, 92, 246, 0.1) !important; border-color: rgba(139, 92, 246, 0.2) !important; }
+            [data-theme="dark"] .bg-rose-50    { background-color: rgba(244, 63, 94, 0.1) !important; border-color: rgba(244, 63, 94, 0.2) !important; }
+
+            .card-tinted {
+                background-color: color-mix(in srgb, var(--tint-color) 4%, white);
+            }
+            [data-theme="dark"] .card-tinted {
+                background-color: color-mix(in srgb, var(--tint-color) 8%, var(--dk-raised)) !important;
+            }
+
+            [data-theme="dark"] .text-emerald-700 { color: #34d399 !important; }
+            [data-theme="dark"] .text-blue-700    { color: #60a5fa !important; }
+            [data-theme="dark"] .text-amber-700   { color: #fbbf24 !important; }
+            [data-theme="dark"] .text-violet-700  { color: #a78bfa !important; }
+            [data-theme="dark"] .text-rose-700    { color: #fb7185 !important; }
+
+            /* ── Ajustement couleurs spécifiques ── */
+            [data-theme="dark"] .text-orange-900 { color: #fdba74 !important; }
+            [data-theme="dark"] .border-orange-200 { border-color: #7c2d12 !important; }
 
             /* ── Survols ── */
             [data-theme="dark"] [class*="hover:bg-slate-50"]:hover,
@@ -103,18 +137,21 @@
             [data-theme="dark"] [class*="hover:bg-slate-200"]:hover { background-color: #2C3646 !important; }
 
             /* ── Bordures ── */
-            [data-theme="dark"] [class*="border-slate-50"]  { border-color: #2E394B !important; }
-            [data-theme="dark"] [class*="border-slate-100"] { border-color: var(--dk-border) !important; }
-            [data-theme="dark"] [class*="border-slate-200"] { border-color: #44536C !important; }
-            [data-theme="dark"] [class*="divide-"] > * + *  { border-color: var(--dk-border) !important; }
+            [data-theme="dark"] .border-slate-50  { border-color: #2E394B !important; }
+            [data-theme="dark"] .border-slate-100 { border-color: var(--dk-border) !important; }
+            [data-theme="dark"] .border-slate-200 { border-color: #44536C !important; }
+            [data-theme="dark"] .divide-y > * + * {
+                border-color: var(--dk-border) !important;
+            }
+            [data-theme="dark"] .divide-x > * + *  { border-color: var(--dk-border) !important; }
 
             /* ── Texte ── */
-            [data-theme="dark"] [class*="text-slate-900"],
-            [data-theme="dark"] [class*="text-slate-800"] { color: var(--dk-t1) !important; }
-            [data-theme="dark"] [class*="text-slate-700"],
-            [data-theme="dark"] [class*="text-slate-600"] { color: var(--dk-t2) !important; }
-            [data-theme="dark"] [class*="text-slate-500"],
-            [data-theme="dark"] [class*="text-slate-400"] { color: var(--dk-t3) !important; }
+            [data-theme="dark"] .text-slate-900,
+            [data-theme="dark"] .text-slate-800 { color: var(--dk-t1) !important; }
+            [data-theme="dark"] .text-slate-700,
+            [data-theme="dark"] .text-slate-600 { color: var(--dk-t2) !important; }
+            [data-theme="dark"] .text-slate-500,
+            [data-theme="dark"] .text-slate-400 { color: var(--dk-t3) !important; }
 
             /* ── Champs de saisie ── */
             [data-theme="dark"] input:not([type=checkbox]):not([type=radio]):not([type=color]):not([type=range]),
@@ -292,6 +329,66 @@
                 transition: background-color .2s ease, border-color .2s ease, color .15s ease !important;
             }
 
+            /* ── Impression (Print) ── */
+            @media print {
+                @page { size: auto; margin: 0mm; } /* Hide browser URL and Laravel title completely */
+
+                header, aside, .no-print, [x-show="sidebarOpen"] { display: none !important; }
+                .md\:ml-64, .md\:ml-20 { margin-left: 0 !important; }
+                .pt-14 { padding-top: 0 !important; }
+                .min-h-screen { min-height: auto !important; }
+                
+                body { padding: 15mm !important; } /* Restore margin via padding so content is not cut off */
+                body, [data-theme="dark"] body { background-color: #fff !important; color: #000 !important; }
+                [data-theme="dark"] .bg-white { background-color: #fff !important; color: #000 !important; }
+                
+                .bg-white { box-shadow: none !important; border: none !important; }
+                table { width: 100% !important; border-collapse: collapse !important; margin-top: 1rem; }
+                th { background-color: #10b981 !important; color: white !important; font-weight: bold; border: 1px solid #047857 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                td { border: 1px solid #cbd5e1 !important; color: #1e293b !important; }
+                
+                /* Cache la colonne des actions (qui est toujours la dernière) */
+                th:last-child, td:last-child { display: none !important; }
+                
+                .bg-emerald-50 { border: 1px solid #10b981 !important; }
+                .bg-amber-50 { border: 1px solid #f59e0b !important; }
+                .bg-rose-50 { border: 1px solid #f43f5e !important; }
+                .bg-blue-50 { border: 1px solid #3b82f6 !important; }
+                
+                /* Cache les éléments non pertinents */
+                nav[aria-label="Pagination Navigation"] { display: none !important; }
+                .sticky.top-14 { display: none !important; }
+                form { display: none !important; } /* Hide search and filter forms */
+                button { display: none !important; } /* Hide buttons */
+                a.inline-flex, a.bg-emerald-600 { display: none !important; } /* Hide action links */
+                
+                /* En-tête d'impression spécifique avec décoration Emerald */
+                .print-only-header { 
+                    display: flex !important; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center; 
+                    margin-bottom: 2rem; 
+                    border-top: 8px solid #10b981; 
+                    border-bottom: 2px solid #e2e8f0; 
+                    padding: 1.5rem 0; 
+                    background-color: #f8fafc !important;
+                    -webkit-print-color-adjust: exact !important; 
+                    print-color-adjust: exact !important;
+                }
+                .print-only-header img { max-height: 80px; margin-bottom: 10px; }
+                .print-only-header h2 { font-size: 24px; font-weight: 800; margin: 0; color: #064e3b; text-transform: uppercase; letter-spacing: 0.05em; }
+                .print-only-header p { font-size: 14px; color: #047857; margin-top: 5px; font-weight: 600; }
+                
+                /* Force full width content */
+                .max-w-7xl { max-width: 100% !important; margin: 0 !important; }
+                .p-4, .p-6, .p-8 { padding: 0 !important; }
+                .overflow-x-auto { overflow: visible !important; }
+            }
+
+            /* ── En-tête masqué par défaut ── */
+            .print-only-header { display: none; }
+
             /* ── Mode clair : fond de page et body ── */
             body { background-color: #f8fafc; }
         </style>
@@ -318,278 +415,134 @@
               }
           }">
 
-        <div class="min-h-full flex">
+        
+        <!-- ── GLOBAL TOP NAVBAR ── -->
+        <header class="fixed top-0 inset-x-0 h-14 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-4">
+                <button @click="window.innerWidth >= 768 ? toggleCollapsed() : sidebarOpen = true" class="text-slate-500 hover:text-slate-900 focus:outline-none transition-colors">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                    <span class="shrink-0 flex items-center justify-center w-8 h-8 bg-emerald-600 rounded-lg text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </span>
+                    <span class="font-bold text-xl text-slate-900 tracking-wide hidden sm:block">ARLEI</span>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-1 sm:gap-3">
+                @if(Auth::user()->isOperateur() && Auth::user()->employe && Auth::user()->employe->equipe_id)
+                    <div x-data="{ isOpen: false }" class="relative inline-block">
+                        <button @click="isOpen = !isOpen" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative" title="Notifications d'invalidation">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                            @if($invalidationNotifications->count() > 0)
+                                <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse"></span>
+                            @endif
+                        </button>
+                        <div x-show="isOpen" @click.outside="isOpen = false" x-transition class="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-4 text-slate-800" style="display: none;">
+                            <h4 class="font-bold text-sm border-b border-slate-100 pb-2 mb-3 flex items-center justify-between">
+                                <span>Tâches Invalidées</span>
+                                <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold">{{ $invalidationNotifications->count() }}</span>
+                            </h4>
+                            <div class="max-h-60 overflow-y-auto space-y-3">
+                                @forelse($invalidationNotifications as $notif)
+                                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-left">
+                                        <p class="font-bold text-slate-900">{{ $notif->ordreProduction->code }} - {{ $notif->transformation->designation }}</p>
+                                        <p class="text-rose-600 font-semibold mt-1">Motif d'invalidation :</p>
+                                        <p class="text-slate-600 mt-0.5 italic text-left">
+                                            @php
+                                                $lines = explode("
+", $notif->observations);
+                                                $lastComment = '';
+                                                foreach(array_reverse($lines) as $line) {
+                                                    if (str_contains($line, 'Phase invalidée par')) { $lastComment = $line; break; }
+                                                }
+                                                if (!$lastComment && !empty($lines)) { $lastComment = end($lines); }
+                                            @endphp
+                                            {{ $lastComment ?: 'Aucun détail' }}
+                                        </p>
+                                        <div class="mt-2 text-right">
+                                            <a href="{{ route('ordre-productions.show', $notif->ordreProduction) }}" class="text-[10px] font-bold text-emerald-600 hover:underline">Voir la fiche &rarr;</a>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="text-center py-4 text-slate-400">Aucune tâche invalidée.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                <button @click="toggleDark()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" :title="dark ? 'Mode clair' : 'Mode sombre'">
+                    <svg x-show="!dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <svg x-show="dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </button>
+                <div class="flex items-center gap-2 px-2 border-l border-slate-200 ml-2">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-xs font-bold text-slate-900 leading-tight">{{ Auth::user()->name }}</p>
+                        <p class="text-[10px] text-slate-500">{{ Auth::user()->customRole?->name ?? Auth::user()->role }}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold text-xs shrink-0">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}" class="ml-1">
+                    @csrf
+                    <button type="submit" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Déconnexion">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <div class="min-h-screen flex pt-14">
 
             <!-- ── Sidebar Desktop ── -->
-            <aside class="hidden md:flex md:flex-col md:fixed md:inset-y-0 z-20 bg-white text-slate-600 border-r border-slate-200 transition-all duration-300 ease-in-out"
+            <aside class="hidden md:flex md:flex-col md:fixed top-14 bottom-0 z-40 bg-white text-slate-600 border-r border-slate-200 transition-all duration-300 ease-in-out"
                    :class="sidebarCollapsed ? 'md:w-20' : 'md:w-64'">
-                <div class="relative flex items-center h-16 border-b border-slate-200 bg-slate-50"
-                     :class="sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-6'">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden">
-                        <span class="shrink-0 flex items-center justify-center w-9 h-9 bg-emerald-600 rounded-lg text-white">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                        </span>
-                        <span x-show="!sidebarCollapsed" x-transition.opacity class="font-bold text-lg text-slate-900 tracking-wide whitespace-nowrap">ARLEI</span>
-                    </a>
-
-                    <!-- Toggle collapse -->
-                    <button @click="toggleCollapsed()"
-                            class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 shadow-sm hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                            :title="sidebarCollapsed ? 'Étendre le menu' : 'Réduire le menu'">
-                        <svg class="w-3.5 h-3.5 transition-transform duration-300" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden px-4 py-6 space-y-7">
+                <div id="sidebar-scrollable-container" class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden px-4 py-4 space-y-7">
                     @include('layouts.navigation-links')
-                </div>
-
-                <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center gap-2"
-                     :class="sidebarCollapsed ? 'flex-col justify-center' : 'justify-between'">
-                    <div class="flex items-center gap-3 overflow-hidden" :class="sidebarCollapsed ? 'flex-col' : ''">
-                        <div class="shrink-0 w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold text-sm">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                        </div>
-                        <div x-show="!sidebarCollapsed" x-transition.opacity class="truncate max-w-[110px]">
-                            <p class="text-sm font-medium text-slate-900 truncate">{{ Auth::user()->name }}</p>
-                            <p class="text-xs text-slate-500 truncate">
-                                {{ Auth::user()->customRole?->name ?? Auth::user()->role }}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1" :class="sidebarCollapsed ? 'flex-col' : ''">
-                        @if(Auth::user()->isOperateur() && Auth::user()->employe && Auth::user()->employe->equipe_id)
-                            <div x-data="{ isOpen: false }" class="relative inline-block">
-                                <button @click="isOpen = !isOpen"
-                                        class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors relative"
-                                        title="Notifications d'invalidation">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-                                    @if($invalidationNotifications->count() > 0)
-                                        <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-slate-50 animate-pulse"></span>
-                                    @endif
-                                </button>
-
-                                <!-- Panel de notifications -->
-                                <div x-show="isOpen"
-                                     @click.outside="isOpen = false"
-                                     x-transition
-                                     class="absolute bottom-10 left-0 w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-4 text-slate-800 overflow-hidden"
-                                     style="display: none;">
-                                    <h4 class="font-bold text-sm border-b border-slate-100 pb-2 mb-3 flex items-center justify-between">
-                                        <span>Tâches Invalidées</span>
-                                        <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold">
-                                            {{ $invalidationNotifications->count() }}
-                                        </span>
-                                    </h4>
-                                    <div class="max-h-60 overflow-y-auto space-y-3">
-                                        @forelse($invalidationNotifications as $notif)
-                                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-left">
-                                                <p class="font-bold text-slate-900">{{ $notif->ordreProduction->code }} - {{ $notif->transformation->designation }}</p>
-                                                <p class="text-rose-600 font-semibold mt-1">Motif d'invalidation :</p>
-                                                <p class="text-slate-600 mt-0.5 italic text-left">
-                                                    @php
-                                                        $lines = explode("\n", $notif->observations);
-                                                        $lastComment = '';
-                                                        foreach(array_reverse($lines) as $line) {
-                                                            if (str_contains($line, 'Phase invalidée par')) {
-                                                                $lastComment = $line;
-                                                                break;
-                                                            }
-                                                        }
-                                                        if (!$lastComment && !empty($lines)) {
-                                                            $lastComment = end($lines);
-                                                        }
-                                                    @endphp
-                                                    {{ $lastComment ?: 'Aucun détail' }}
-                                                </p>
-                                                <div class="mt-2 text-right">
-                                                    <a href="{{ route('ordre-productions.show', $notif->ordreProduction) }}" class="text-[10px] font-bold text-emerald-600 hover:underline">
-                                                        Voir la fiche &rarr;
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        @empty
-                                            <p class="text-center py-4 text-slate-400">Aucune tâche invalidée.</p>
-                                        @endforelse
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                        <!-- Toggle dark -->
-                        <button @click="toggleDark()"
-                                class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                                :title="dark ? 'Mode clair' : 'Mode sombre'">
-                            <svg x-show="!dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                            </svg>
-                            <svg x-show="dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                        </button>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Déconnexion">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
                 </div>
             </aside>
 
             <!-- ── Sidebar Mobile ── -->
-            <div x-show="sidebarOpen" class="fixed inset-0 z-40 md:hidden" style="display:none;">
-                <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" @click="sidebarOpen = false"></div>
-                <div class="fixed inset-y-0 left-0 flex w-full max-w-xs flex-col bg-white text-slate-600">
-                    <div class="flex items-center justify-between h-16 px-6 bg-slate-50 border-b border-slate-200">
-                        <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-                            <span class="p-2 bg-emerald-600 rounded-lg text-white">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                </svg>
-                            </span>
-                            <span class="font-bold text-lg text-slate-900">ARLEI</span>
-                        </a>
-                        <button @click="sidebarOpen = false" class="p-1 rounded-lg text-slate-500 hover:text-slate-900">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div x-data="{ sidebarCollapsed: false }" class="flex-1 overflow-y-auto px-4 py-6 space-y-7">
-                        @include('layouts.navigation-links')
-                    </div>
-                    <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold text-sm">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-900">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-slate-500">{{ Auth::user()->customRole?->name ?? Auth::user()->role }}</p>
-                            </div>
+            <div class="relative z-50 md:hidden" role="dialog" aria-modal="true">
+                <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" @click="sidebarOpen = false" style="display: none;"></div>
+                <div class="fixed inset-0 flex pointer-events-none">
+                    <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full" class="relative mr-16 flex w-full max-w-xs flex-col bg-white text-slate-600 shadow-2xl pointer-events-auto" style="display: none;">
+                        <div class="flex items-center justify-between h-14 px-6 border-b border-slate-100 bg-white">
+                            <span class="font-bold text-lg text-slate-900">Navigation</span>
+                            <button @click="sidebarOpen = false" class="text-slate-400 hover:text-slate-600 focus:outline-none"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="toggleDark(); sidebarOpen = false"
-                                    class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                                <svg x-show="!dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                                </svg>
-                                <svg x-show="dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
-                            </button>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                </button>
-                            </form>
+                        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-7">
+                            @include('layouts.navigation-links')
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- ── Contenu principal ── -->
-            <div class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
-                 :class="sidebarCollapsed ? 'md:pl-20' : 'md:pl-64'">
-                <!-- Top bar mobile -->
-                <header class="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow-sm md:hidden border-b border-slate-200">
-                    <button @click="sidebarOpen = true" class="px-4 border-r border-slate-200 text-slate-500 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
-                        </svg>
-                    </button>
-                    <div class="flex flex-1 justify-between px-4 items-center">
-                        <span class="font-bold text-lg text-slate-900">ARLEI</span>
-                        <div class="flex items-center gap-3">
-                            @if(Auth::user()->isOperateur() && Auth::user()->employe && Auth::user()->employe->equipe_id)
-                                <div x-data="{ isOpen: false }" class="relative inline-block">
-                                    <button @click="isOpen = !isOpen"
-                                            class="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 transition-colors relative"
-                                            title="Notifications d'invalidation">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                        </svg>
-                                        @if($invalidationNotifications->count() > 0)
-                                            <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse"></span>
-                                        @endif
-                                    </button>
-                                    
-                                    <!-- Mobile Dropdown Panel -->
-                                    <div x-show="isOpen" 
-                                         @click.outside="isOpen = false"
-                                         x-transition
-                                         class="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-4 text-slate-800"
-                                         style="display: none;">
-                                        <h4 class="font-bold text-sm border-b border-slate-100 pb-2 mb-3 flex items-center justify-between">
-                                            <span>Tâches Invalidées</span>
-                                            <span class="px-2 py-0.5 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold">
-                                                {{ $invalidationNotifications->count() }}
-                                            </span>
-                                        </h4>
-                                        <div class="max-h-60 overflow-y-auto space-y-3">
-                                            @forelse($invalidationNotifications as $notif)
-                                                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-left">
-                                                    <p class="font-bold text-slate-900">{{ $notif->ordreProduction->code }} - {{ $notif->transformation->designation }}</p>
-                                                    <p class="text-rose-600 font-semibold mt-1">Motif d'invalidation :</p>
-                                                    <p class="text-slate-600 mt-0.5 italic text-left">
-                                                        @php
-                                                            $lines = explode("\n", $notif->observations);
-                                                            $lastComment = '';
-                                                            foreach(array_reverse($lines) as $line) {
-                                                                if (str_contains($line, 'Phase invalidée par')) {
-                                                                    $lastComment = $line;
-                                                                    break;
-                                                                }
-                                                            }
-                                                            if (!$lastComment && !empty($lines)) {
-                                                                $lastComment = end($lines);
-                                                            }
-                                                        @endphp
-                                                        {{ $lastComment ?: 'Aucun détail' }}
-                                                    </p>
-                                                    <div class="mt-2 text-right">
-                                                        <a href="{{ route('ordre-productions.show', $notif->ordreProduction) }}" class="text-[10px] font-bold text-emerald-600 hover:underline">
-                                                            Voir la fiche &rarr;
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            @empty
-                                                <p class="text-center py-4 text-slate-400">Aucune tâche invalidée.</p>
-                                            @endforelse
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold text-xs">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+            <div class="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out" :class="sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'">
+                <!-- Header de page -->
+                @isset($header)
+                    <div class="sticky top-14 z-30 px-4 sm:px-6 lg:px-8 py-3 bg-white/90 backdrop-blur-sm border-b border-slate-200">
+                        <div class="max-w-7xl mx-auto w-full">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                                {{ $header }}
                             </div>
                         </div>
                     </div>
-                </header>
-
-                <!-- Header de page -->
-                @isset($header)
-                    <header class="bg-white border-b border-slate-200 py-6 px-6 sm:px-8">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                            {{ $header }}
-                        </div>
-                    </header>
                 @endisset
 
                 <!-- Contenu -->
-                <main class="flex-1 py-8 px-6 sm:px-8 bg-slate-50">
-                    {{ $slot }}
+                <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 bg-slate-50">
+                    <div class="print-only-header">
+                        <img src="{{ asset('images/logo.png') }}" alt="Logo ARLEI" />
+                        <h2 id="print-document-title">Document Interne ARLEI</h2>
+                        <p>Imprimé le {{ date('d/m/Y à H:i') }}</p>
+                    </div>
+                    <div class="max-w-7xl mx-auto w-full">
+                        {{ $slot }}
+                    </div>
                 </main>
             </div>
         </div>
@@ -638,6 +591,18 @@
                         });
                     });
                 });
+
+                // Restauration de la position de scroll de la sidebar
+                const sidebar = document.getElementById('sidebar-scrollable-container');
+                if (sidebar) {
+                    const scrollPos = sessionStorage.getItem('sidebarScrollPos');
+                    if (scrollPos) {
+                        sidebar.scrollTop = scrollPos;
+                    }
+                    sidebar.addEventListener('scroll', function() {
+                        sessionStorage.setItem('sidebarScrollPos', sidebar.scrollTop);
+                    });
+                }
             });
 
             function confirmDelete(event, form) {
@@ -698,6 +663,20 @@
                     }
                 });
             }
+
+            // Auto-trigger print if requested
+            @if(request('print') == 'true')
+            window.addEventListener('load', function() {
+                // Set the print document title dynamically from the page header
+                const h1 = document.querySelector('.sticky h1') || document.querySelector('h1');
+                if (h1 && h1.innerText.trim() !== '') {
+                    document.getElementById('print-document-title').innerText = h1.innerText.trim();
+                }
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            });
+            @endif
         </script>
     </body>
 </html>

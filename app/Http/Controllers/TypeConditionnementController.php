@@ -18,7 +18,7 @@ class TypeConditionnementController extends Controller
             });
         }
 
-        $types = $query->orderBy('libelle')->paginate(15)->withQueryString();
+        $types = $query->orderBy('libelle')->paginate(7)->withQueryString();
         $totalCount = TypeConditionnement::count();
 
         return view('conditionnements.index', compact('types', 'totalCount'));

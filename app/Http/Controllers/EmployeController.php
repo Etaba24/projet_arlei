@@ -36,7 +36,7 @@ class EmployeController extends Controller
             $query->where('equipe_id', $equipe_id);
         }
 
-        $employes = $query->paginate(10)->withQueryString();
+        $employes = $query->paginate(request('print') == 'true' ? 1000 : 7)->withQueryString();
         $totalCount = Employe::count();
 
         // 2. Récupérer les données indispensables pour les listes déroulantes des modals
@@ -155,16 +155,6 @@ class EmployeController extends Controller
             ]);
         }
 
-        // Si un compte est lié, vérifier l'unicité de l'email avant toute écriture
-        if ($employe->user_id && $request->filled('email')) {
-            $newEmail = mb_strtolower(trim($request->email));
-            if (User::where('email', $newEmail)->where('id', '!=', $employe->user_id)->exists()) {
-                return redirect()->back()
-                    ->with('error', 'L\'adresse email « ' . $newEmail . ' » est déjà utilisée par un autre compte.')
-                    ->withInput();
-            }
-        }
-
         DB::transaction(function () use ($request, $employe, $validated, $creerCompte) {
             if ($creerCompte) {
                 $user = User::create([
@@ -178,18 +168,17 @@ class EmployeController extends Controller
 
             $employe->update($validated);
 
-            // Si un compte existant est lié, synchroniser nom / email / mot de passe
-            if (!$creerCompte && $employe->user) {
-                $updateData = [
-                    'name' => $request->prenom . ' ' . $request->nom,
-                ];
-                if ($request->filled('email')) {
-                    $updateData['email'] = mb_strtolower(trim($request->email));
-                }
+            // Si un compte existant est lié, on autorise seulement la modification du mot de passe
+            // (on ne synchronise plus le nom et l'email pour éviter d'écraser les identifiants de connexion)
+            if (!$creerCompte && $employe->user_id) {
                 if ($request->filled('password')) {
-                    $updateData['password'] = Hash::make($request->password);
+                    $user = User::find($employe->user_id);
+                    if ($user) {
+                        $user->update([
+                            'password' => Hash::make($request->password),
+                        ]);
+                    }
                 }
-                $employe->user->update($updateData);
             }
         });
 

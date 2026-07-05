@@ -21,7 +21,7 @@ class EquipeController extends Controller
             $deptQuery->where(fn($q)   => $q->where('designation', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%"));
         }
 
-        $equipes      = $equipeQuery->orderBy('code')->paginate(10)->withQueryString();
+        $equipes      = $equipeQuery->orderBy('code')->paginate(7)->withQueryString();
         $departements = $deptQuery->orderBy('code')->get();
         $totalEquipes = Equipe::count();
 

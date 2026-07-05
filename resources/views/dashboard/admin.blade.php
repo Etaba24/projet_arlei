@@ -109,16 +109,16 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             @php 
                 $stats = [
-                    ['Prod', $totalOP ?? 0, 'bg-emerald-100 text-emerald-700'],
-                    ['MP', $totalMatieresPremieres ?? 0, 'bg-blue-100 text-blue-700'],
-                    ['PF', $totalProduitsFinis ?? 0, 'bg-amber-100 text-amber-700'],
-                    ['Staff', $totalEmployes ?? 0, 'bg-violet-100 text-violet-700'],
-                    ['Machines', $machinesCount ?? 0, 'bg-rose-100 text-rose-700'],
-                    ['Transfo', $totalTransformations ?? 0, 'bg-slate-100 text-slate-700']
+                    ['Prod', $totalOP ?? 0, 'bg-emerald-50 border border-emerald-200 text-emerald-700'],
+                    ['MP', $totalMatieresPremieres ?? 0, 'bg-blue-50 border border-blue-200 text-blue-700'],
+                    ['PF', $totalProduitsFinis ?? 0, 'bg-amber-50 border border-amber-200 text-amber-700'],
+                    ['Staff', $totalEmployes ?? 0, 'bg-violet-50 border border-violet-200 text-violet-700'],
+                    ['Machines', $machinesCount ?? 0, 'bg-rose-50 border border-rose-200 text-rose-700'],
+                    ['Transfo', $totalTransformations ?? 0, 'bg-slate-50 border border-slate-200 text-slate-700']
                 ];
             @endphp
             @foreach($stats as $kpi)
-            <div class="{{ $kpi[2] }} p-4 rounded-2xl flex flex-col items-center">
+            <div class="{{ $kpi[2] }} p-4 rounded-2xl flex flex-col items-center transition-colors">
                 <span class="text-[10px] uppercase font-bold opacity-70">{{ $kpi[0] }}</span>
                 <span class="text-xl font-black">{{ $kpi[1] }}</span>
             </div>
@@ -130,9 +130,9 @@
             <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <h3 class="font-bold text-slate-800 mb-6">État de la Production</h3>
                 <div class="grid grid-cols-3 gap-4 text-center">
-                    <div class="p-4 bg-slate-50 rounded-2xl"><p class="text-[10px] text-slate-400 uppercase font-bold">En cours</p><p class="text-2xl font-black">{{ $opEnCours ?? 0 }}</p></div>
-                    <div class="p-4 bg-slate-50 rounded-2xl"><p class="text-[10px] text-slate-400 uppercase font-bold">Terminés</p><p class="text-2xl font-black">{{ $opTermines ?? 0 }}</p></div>
-                    <div class="p-4 bg-slate-50 rounded-2xl"><p class="text-[10px] text-slate-400 uppercase font-bold">Conditionnés</p><p class="text-2xl font-black">{{ $opConditionnes ?? 0 }}</p></div>
+                    <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl transition-colors"><p class="text-[10px] text-amber-700 uppercase font-bold">En cours</p><p class="text-2xl font-black text-amber-600">{{ $opEnCours ?? 0 }}</p></div>
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl transition-colors"><p class="text-[10px] text-emerald-700 uppercase font-bold">Terminés</p><p class="text-2xl font-black text-emerald-600">{{ $opTermines ?? 0 }}</p></div>
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-2xl transition-colors"><p class="text-[10px] text-blue-700 uppercase font-bold">Conditionnés</p><p class="text-2xl font-black text-blue-600">{{ $opConditionnes ?? 0 }}</p></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">

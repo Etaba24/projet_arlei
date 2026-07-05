@@ -109,7 +109,7 @@
                 @endif
             </div>
             @if(Auth::user()->hasPermission('production.interrompre'))
-            <form action="{{ route('ordre-productions.destroy', $op) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet ordre de production ? Cette action est irréversible.');">
+            <form action="{{ route('ordre-productions.destroy', $op) }}" method="POST" onsubmit="confirmDelete(event, this)">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition-colors whitespace-nowrap">

@@ -2,9 +2,17 @@
     <div class="space-y-6" x-data="{ openCommande: false, openExpedition: false }">
 
         <x-slot name="header">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Flux Logistiques — Produits Finis</h1>
-                <p class="text-sm text-slate-500 mt-1">Gestion des commandes clients grossistes et des expéditions de produits finis.</p>
+            <div class="flex flex-col md:flex-row md:items-center justify-between w-full gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Flux Logistiques — Produits Finis</h1>
+                    <p class="text-sm text-slate-500 mt-1">Gestion des commandes clients grossistes et des expéditions de produits finis.</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto mt-3 md:mt-0">
+                    <a href="{{ request()->fullUrlWithQuery(['print' => 'true']) }}" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 shadow-sm transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Imprimer
+                    </a>
+                </div>
             </div>
         </x-slot>
 
@@ -60,6 +68,29 @@
                         Nouvelle Commande Client
                     </button>
                 </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="px-6 py-4 bg-white border-b border-slate-100">
+                <form method="GET" action="{{ route('logistique.pf') }}" class="flex flex-col sm:flex-row gap-3">
+                    <input type="hidden" name="tab" value="commandes">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Rechercher (N°, Client, Produit...)" class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder-slate-400">
+                    </div>
+                    <div class="w-full sm:w-48">
+                        <select name="statut" class="block w-full pl-3 pr-10 py-2 border border-slate-200 rounded-xl text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-700 bg-white" onchange="this.form.submit()">
+                            <option value="">Tous les statuts</option>
+                            <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                            <option value="en_preparation" {{ request('statut') === 'en_preparation' ? 'selected' : '' }}>En préparation</option>
+                            <option value="livree" {{ request('statut') === 'livree' ? 'selected' : '' }}>Expédiée</option>
+                        </select>
+                    </div>
+                </form>
             </div>
 
             <div class="overflow-x-auto">
@@ -131,6 +162,21 @@
                         Nouvelle Expédition
                     </button>
                 </div>
+            </div>
+
+            <!-- Filtre Expéditions -->
+            <div class="px-6 py-4 bg-white border-b border-slate-100">
+                <form method="GET" action="{{ route('logistique.pf') }}">
+                    <input type="hidden" name="tab" value="livraisons">
+                    <div class="relative w-full max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input type="text" name="search_livraison" value="{{ request('search_livraison') }}" placeholder="Rechercher (N° Lot, Commande...)" class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl leading-5 bg-white text-sm focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder-slate-400">
+                    </div>
+                </form>
             </div>
 
             <div class="overflow-x-auto">

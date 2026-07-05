@@ -52,6 +52,11 @@ class PhaseProduction extends Model
         if ($this->statut !== 'en_attente' || !$this->phasePrecedenteEstValidee()) return false;
 
         $this->update(['statut' => 'en_cours', 'date_debut' => now()]);
+
+        if ($this->machine_id) {
+            Machine::where('id', $this->machine_id)->update(['etat' => 'en_marche']);
+        }
+
         return true;
     }
 
@@ -60,6 +65,11 @@ class PhaseProduction extends Model
         if ($this->statut !== 'en_cours') return false;
 
         $this->update(['statut' => 'termine', 'date_fin' => now()]);
+
+        if ($this->machine_id) {
+            Machine::where('id', $this->machine_id)->update(['etat' => 'pret']);
+        }
+
         return true;
     }
 

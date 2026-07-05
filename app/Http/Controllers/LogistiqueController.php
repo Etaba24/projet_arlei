@@ -27,14 +27,36 @@ class LogistiqueController extends Controller
         $fournisseurs = Fournisseur::orderBy('designation')->get();
         $employes = Employe::orderBy('nom')->get();
 
-        $commandes = CommandeMp::with(['matierePremiere', 'fournisseur', 'employe', 'livraisonMps'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
+        $queryCommandes = CommandeMp::with(['matierePremiere', 'fournisseur', 'employe', 'livraisonMps']);
+        
+        if ($search = $request->input('search')) {
+            $queryCommandes->where(function ($q) use ($search) {
+                $q->where('numero', 'like', "%{$search}%")
+                  ->orWhereHas('matierePremiere', fn($sq) => $sq->where('libelle', 'like', "%{$search}%"))
+                  ->orWhereHas('fournisseur', fn($sq) => $sq->where('designation', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($statut = $request->input('statut')) {
+            $queryCommandes->where('statut', $statut);
+        }
+
+        $commandes = $queryCommandes->orderBy('created_at', 'desc')
+            ->paginate(request('print') == 'true' ? 1000 : 7)
             ->withQueryString();
 
-        $livraisons = LivraisonMp::with(['commandeMp.matierePremiere', 'employe'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
+        $queryLivraisons = LivraisonMp::with(['commandeMp.matierePremiere', 'employe']);
+        if ($searchLiv = $request->input('search_livraison')) {
+            $queryLivraisons->where(function ($q) use ($searchLiv) {
+                $q->where('numero_bordereau', 'like', "%{$searchLiv}%")
+                  ->orWhereHas('commandeMp', fn($sq) => $sq->where('numero', 'like', "%{$searchLiv}%"))
+                  ->orWhereHas('commandeMp.matierePremiere', fn($sq) => $sq->where('libelle', 'like', "%{$searchLiv}%"))
+                  ->orWhereHas('employe', fn($sq) => $sq->where('nom', 'like', "%{$searchLiv}%"));
+            });
+        }
+
+        $livraisons = $queryLivraisons->orderBy('created_at', 'desc')
+            ->paginate(request('print') == 'true' ? 1000 : 7)
             ->withQueryString();
 
         // Liste non paginée pour le menu déroulant du modal "Pesée Balance"
@@ -46,9 +68,6 @@ class LogistiqueController extends Controller
         return view('logistique.mp', compact('matieres', 'fournisseurs', 'employes', 'commandes', 'livraisons', 'commandesEnAttente', 'tab'));
     }
 
-    /**
-     * Enregistrer une nouvelle commande de matière première avec CODE AUTOMATIQUE
-     */
     /**
      * Enregistrer une nouvelle commande de matière première avec CODE AUTOMATIQUE
      */
@@ -84,9 +103,6 @@ class LogistiqueController extends Controller
         return redirect()->back()->with('success', 'Commande ' . $code . ' enregistrée avec succès.');
     }
 
-    /**
-     * Réceptionner / Livrer une commande de matière première (Pesée Balance)
-     */
     /**
      * Réceptionner / Livrer une commande de matière première (Pesée Balance)
      */
@@ -151,14 +167,35 @@ class LogistiqueController extends Controller
         $produits = ProduitFini::orderBy('designation')->get();
         $clients = Client::orderBy('nom')->get();
 
-        $commandes = CommandePf::with(['produitFini', 'client', 'livraisonPfs'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
+        $queryCommandes = CommandePf::with(['produitFini', 'client', 'livraisonPfs']);
+        
+        if ($search = $request->input('search')) {
+            $queryCommandes->where(function ($q) use ($search) {
+                $q->where('numero', 'like', "%{$search}%")
+                  ->orWhereHas('produitFini', fn($sq) => $sq->where('designation', 'like', "%{$search}%"))
+                  ->orWhereHas('client', fn($sq) => $sq->where('nom', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($statut = $request->input('statut')) {
+            $queryCommandes->where('statut', $statut);
+        }
+
+        $commandes = $queryCommandes->orderBy('created_at', 'desc')
+            ->paginate(request('print') == 'true' ? 1000 : 7)
             ->withQueryString();
 
-        $livraisons = LivraisonPf::with(['commandePf.produitFini'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
+        $queryLivraisons = LivraisonPf::with(['commandePf.produitFini']);
+        if ($searchLiv = $request->input('search_livraison')) {
+            $queryLivraisons->where(function ($q) use ($searchLiv) {
+                $q->where('numero_lot', 'like', "%{$searchLiv}%")
+                  ->orWhereHas('commandePf', fn($sq) => $sq->where('numero', 'like', "%{$searchLiv}%"))
+                  ->orWhereHas('commandePf.produitFini', fn($sq) => $sq->where('designation', 'like', "%{$searchLiv}%"));
+            });
+        }
+
+        $livraisons = $queryLivraisons->orderBy('created_at', 'desc')
+            ->paginate(request('print') == 'true' ? 1000 : 7)
             ->withQueryString();
 
         // Liste non paginée pour le menu déroulant du modal "Expédition"

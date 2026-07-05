@@ -21,18 +21,18 @@
          @open-create.window="openCreate = true">
         
         <x-slot name="header">
-            <div class="flex flex-col md:flex-row md:items-center w-full gap-3 flex-wrap">
-                <div class="shrink-0">
+            <div class="flex flex-col lg:flex-row lg:items-center w-full gap-3 flex-wrap">
+                <div class="shrink-0 w-full lg:w-auto">
                     <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Gestion des Employés</h1>
                     <p class="text-sm text-slate-500 mt-1">Registre du personnel, affectations aux équipes et liaisons de compte.</p>
                 </div>
 
                 {{-- ── Filtres instantanés ── --}}
                 <form id="filter-form" method="GET" action="{{ route('employes.index') }}"
-                      class="flex flex-1 flex-wrap items-center gap-2 ml-0 md:ml-6">
+                      class="flex flex-col sm:flex-row flex-1 w-full sm:w-auto items-center gap-3 sm:ml-6 mt-4 sm:mt-0">
 
                     {{-- Recherche texte --}}
-                    <div class="relative flex-1 min-w-[180px] max-w-xs">
+                    <div class="relative w-full sm:flex-1 sm:min-w-[180px] sm:max-w-xs">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
@@ -44,7 +44,7 @@
                     </div>
 
                     {{-- Filtre département --}}
-                    <div class="relative min-w-[180px]">
+                    <div class="relative w-full sm:w-auto sm:min-w-[180px]">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
@@ -77,12 +77,16 @@
                     @endif
                 </form>
 
-                <div class="shrink-0">
+                <div class="shrink-0 w-full sm:w-auto mt-3 sm:mt-0 flex gap-2">
+                    <a href="{{ request()->fullUrlWithQuery(['print' => 'true']) }}" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 shadow-sm transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        Imprimer
+                    </a>
                     @can('create', App\Models\Employe::class)
                     @endcan
                     @if(Auth::user()->hasPermission('rh.employes'))
                     <button @click="$dispatch('open-create')"
-                            class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm shadow-emerald-600/10 transition-colors">
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm shadow-emerald-600/10 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>

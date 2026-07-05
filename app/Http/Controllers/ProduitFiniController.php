@@ -24,7 +24,7 @@ class ProduitFiniController extends Controller
             $query->where('unite_mesure', $unite);
         }
 
-        $produits = $query->orderBy('code')->paginate(10)->withQueryString();
+        $produits = $query->orderBy('code')->paginate(request('print') == 'true' ? 1000 : 7)->withQueryString();
         $totalCount = ProduitFini::count();
         $unites = UniteMesure::orderBy('libelle')->get();
 

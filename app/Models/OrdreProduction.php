@@ -124,10 +124,16 @@ class OrdreProduction extends Model
         return $phases->count() === 1 ? 'intermediaire' : 'intermediaire';
     }
 
-    /** Stop this production order, even if in progress */
     public function interrompre(string $motif = ''): bool
     {
         if (!in_array($this->statut, ['en_attente', 'en_cours', 'conditionne'])) return false;
+
+        // Find machines used in current or pending phases before updating phase status
+        $machineIds = $this->phaseProductions()
+                           ->whereIn('statut', ['en_attente', 'en_cours'])
+                           ->pluck('machine_id')
+                           ->filter()
+                           ->unique();
 
         $this->update([
             'statut'             => 'interrompu',
@@ -139,6 +145,11 @@ class OrdreProduction extends Model
              ->whereIn('statut', ['en_attente', 'en_cours'])
              ->update(['statut' => 'interrompu']);
 
+        // Update machines state to 'arret'
+        if ($machineIds->isNotEmpty()) {
+            Machine::whereIn('id', $machineIds)->update(['etat' => 'arret']);
+        }
+
         return true;
     }
 
@@ -146,6 +157,13 @@ class OrdreProduction extends Model
     public function reprendre(): bool
     {
         if ($this->statut !== 'interrompu') return false;
+
+        // Fetch machine IDs before updating phases
+        $machineIds = $this->phaseProductions()
+                           ->where('statut', 'interrompu')
+                           ->pluck('machine_id')
+                           ->filter()
+                           ->unique();
 
         $this->update([
             'statut'             => 'en_cours',
@@ -157,12 +175,24 @@ class OrdreProduction extends Model
              ->where('statut', 'interrompu')
              ->update(['statut' => 'en_attente']);
 
+        // Set machines back to 'pret' since phases are now waiting to be started
+        if ($machineIds->isNotEmpty()) {
+            Machine::whereIn('id', $machineIds)->update(['etat' => 'pret']);
+        }
+
         return true;
     }
 
     public function annuler(string $motif = ''): bool
     {
         if (!in_array($this->statut, ['en_attente', 'en_cours', 'interrompu'])) return false;
+
+        // Find machines before updating phase statuses
+        $machineIds = $this->phaseProductions()
+                           ->whereIn('statut', ['en_attente', 'en_cours', 'interrompu'])
+                           ->pluck('machine_id')
+                           ->filter()
+                           ->unique();
 
         $this->update([
             'statut'             => 'annule',
@@ -171,8 +201,13 @@ class OrdreProduction extends Model
         ]);
 
         $this->phaseProductions()
-             ->whereIn('statut', ['en_attente', 'en_cours', 'termine'])
+             ->whereIn('statut', ['en_attente', 'en_cours', 'termine', 'interrompu'])
              ->update(['statut' => 'annule']);
+
+        // Update machines state to 'pret'
+        if ($machineIds->isNotEmpty()) {
+            Machine::whereIn('id', $machineIds)->update(['etat' => 'pret']);
+        }
 
         return true;
     }

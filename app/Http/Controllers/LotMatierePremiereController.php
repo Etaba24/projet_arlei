@@ -20,7 +20,7 @@ class LotMatierePremiereController extends Controller
             });
         }
 
-        $lots      = $query->orderBy('date_reception', 'desc')->paginate(10)->withQueryString();
+        $lots      = $query->orderBy('date_reception', 'desc')->paginate(7)->withQueryString();
         $matieres  = MatierePremiere::orderBy('libelle')->get();
         $fournisseurs = Fournisseur::orderBy('nom')->get();
 
