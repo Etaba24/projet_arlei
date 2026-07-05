@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdreProductionController;
 use App\Http\Controllers\MatierePremiereController;
 use App\Http\Controllers\ProduitFiniController;
+use App\Http\Controllers\ProduitSemiFiniController;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\MachineController;
@@ -16,7 +17,18 @@ use App\Http\Controllers\PhaseProductionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LotMatierePremiereController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SimulationController;
+use App\Http\Controllers\TypeConditionnementController;
+use App\Http\Controllers\UniteMesureController;
 use Illuminate\Support\Facades\Route;
+
+foreach ([
+    'client', 'conditionnement', 'employe', 'equipe', 'fournisseur',
+    'lot', 'machine', 'matieres_premiere', 'ordre_production',
+    'phase', 'produits_fini', 'produit_semi_fini', 'role', 'transformation', 'user',
+] as $uuidParameter) {
+    Route::pattern($uuidParameter, '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}');
+}
 
 Route::get('/', function () {
     return view('auth.login');
@@ -38,11 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Scan & consultation OP (opérateur peut voir sa fiche)
     Route::post('/ordre-productions/scan', [OrdreProductionController::class, 'scan'])->name('ordre-productions.scan');
     Route::get('/ordre-productions/{ordre_production}', [OrdreProductionController::class, 'show'])
-        ->name('ordre-productions.show')
-        ->where('ordre_production', '[0-9]+');
+        ->name('ordre-productions.show');
 
     // ── Interface admin (hasAdminInterface) ──────────────────────────────────
     Route::middleware('admin')->group(function () {
+
+        // API Unités de mesure (accessible dès lors qu'on est admin)
+        Route::get('/api/unites', [UniteMesureController::class, 'index'])->name('api.unites.index');
+        Route::post('/api/unites', [UniteMesureController::class, 'store'])->name('api.unites.store');
 
         // ════════════════════════════════════════════════════════════════════
         // PRODUCTION
@@ -58,12 +73,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Écriture — chaque action protégée individuellement
         Route::middleware('perm:production.creer')->group(function () {
+            Route::post('/api/simulation-op', [SimulationController::class, 'simuler'])->name('api.simulation-op');
             Route::get('/ordre-productions/create', [OrdreProductionController::class, 'create'])->name('ordre-productions.create');
             Route::post('/ordre-productions', [OrdreProductionController::class, 'store'])->name('ordre-productions.store');
             Route::post('/ordre-productions/{ordre_production}/add-transformation', [OrdreProductionController::class, 'addTransformation'])->name('ordre-productions.add-transformation');
         });
         Route::middleware('perm:production.valider-phase')->group(function () {
             Route::post('/ordre-productions/{ordre_production}/valider-phase/{phase}', [OrdreProductionController::class, 'validerPhase'])->name('ordre-productions.valider-phase');
+            Route::post('/ordre-productions/{ordre_production}/invalider-phase/{phase}', [OrdreProductionController::class, 'invaliderPhase'])->name('ordre-productions.invalider-phase');
         });
         Route::middleware('perm:production.conditionner')->group(function () {
             Route::post('/ordre-productions/{ordre_production}/conditionner', [OrdreProductionController::class, 'conditionner'])->name('ordre-productions.conditionner');
@@ -73,6 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::middleware('perm:production.interrompre')->group(function () {
             Route::post('/ordre-productions/{ordre_production}/interrompre', [OrdreProductionController::class, 'interrompre'])->name('ordre-productions.interrompre');
+            Route::post('/ordre-productions/{ordre_production}/annuler', [OrdreProductionController::class, 'annuler'])->name('ordre-productions.annuler');
+            Route::delete('/ordre-productions/{ordre_production}/supprimer', [OrdreProductionController::class, 'destroy'])->name('ordre-productions.destroy');
         });
         Route::middleware('perm:production.reprendre')->group(function () {
             Route::post('/ordre-productions/{ordre_production}/reprendre', [OrdreProductionController::class, 'reprendre'])->name('ordre-productions.reprendre');
@@ -90,6 +109,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::middleware('perm:stocks.matieres-premieres')->group(function () {
             Route::resource('matieres-premieres', MatierePremiereController::class)->except(['index', 'show']);
+        });
+
+        // Produits semi-finis
+        Route::middleware('perm:stocks.semi-finis,stocks.voir')->group(function () {
+            Route::get('/produits-semi-finis', [ProduitSemiFiniController::class, 'index'])->name('produits-semi-finis.index');
+        });
+        Route::middleware('perm:stocks.semi-finis')->group(function () {
+            Route::post('/produits-semi-finis', [ProduitSemiFiniController::class, 'store'])->name('produits-semi-finis.store');
+            Route::put('/produits-semi-finis/{produit_semi_fini}', [ProduitSemiFiniController::class, 'update'])->name('produits-semi-finis.update');
+            Route::delete('/produits-semi-finis/{produit_semi_fini}', [ProduitSemiFiniController::class, 'destroy'])->name('produits-semi-finis.destroy');
         });
 
         // Produits finis
@@ -115,6 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::middleware('perm:stocks.machines')->group(function () {
             Route::resource('machines', MachineController::class)->except(['index', 'show']);
+            Route::patch('machines/{machine}/state', [MachineController::class, 'updateState'])->name('machines.update-state');
         });
 
         // Transformations
@@ -123,6 +153,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::middleware('perm:stocks.transformations')->group(function () {
             Route::resource('transformations', TransformationController::class)->except(['index', 'show']);
+        });
+
+        // Conditionnements (Configuration)
+        Route::middleware('perm:stocks.transformations,stocks.voir')->group(function () {
+            Route::resource('conditionnements', TypeConditionnementController::class)->only(['index', 'show']);
+        });
+        Route::middleware('perm:stocks.transformations')->group(function () {
+            Route::resource('conditionnements', TypeConditionnementController::class)->except(['index', 'show', 'create', 'edit']);
         });
 
         // ════════════════════════════════════════════════════════════════════

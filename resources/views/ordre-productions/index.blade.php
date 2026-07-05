@@ -5,13 +5,26 @@
                 <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Ordres de Production</h1>
                 <p class="text-sm text-slate-500 mt-1">Gestion des productions en parallèle, suivi des phases et clôture par conditionnement.</p>
             </div>
-            <form method="GET" action="{{ route('ordre-productions.index') }}" class="relative w-full md:w-80 ml-0 md:ml-8">
-                <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Rechercher dans le tableau..."
-                       class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
-                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-                </svg>
+            <form method="GET" action="{{ route('ordre-productions.index') }}" class="flex items-center gap-3 w-full md:w-auto">
+                {{-- Barre de recherche --}}
+                <div class="relative flex-1 md:flex-none md:w-64">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Rechercher..."
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                    </svg>
+                </div>
+                {{-- Combo box de statut --}}
+                <select name="statut" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                    <option value="en_cours" {{ request('statut') === 'en_cours' ? 'selected' : '' }}>En cours</option>
+                    <option value="conditionne" {{ request('statut') === 'conditionne' ? 'selected' : '' }}>Conditionné</option>
+                    <option value="termine" {{ request('statut') === 'termine' ? 'selected' : '' }}>Terminé</option>
+                    <option value="interrompu" {{ request('statut') === 'interrompu' ? 'selected' : '' }}>Interrompu</option>
+                    <option value="annule" {{ request('statut') === 'annule' ? 'selected' : '' }}>Annulé</option>
+                </select>
             </form>
             <div class="ml-auto">
                 <a href="{{ route('ordre-productions.create') }}" class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm shadow-emerald-600/10 transition-colors">
@@ -54,6 +67,8 @@
                                         'en_cours' => 'bg-amber-50 text-amber-700 ring-amber-600/10',
                                         'conditionne' => 'bg-sky-50 text-sky-700 ring-sky-600/10',
                                         'termine' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/10',
+                                        'interrompu' => 'bg-rose-50 text-rose-700 ring-rose-600/10',
+                                        'annule' => 'bg-slate-100 text-slate-700 ring-slate-300',
                                     ];
                                 @endphp
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xxs font-semibold ring-1 ring-inset {{ $statusClasses[$op->statut] ?? 'bg-slate-100 text-slate-700 ring-slate-200' }}">
@@ -62,9 +77,18 @@
                             </td>
                             <td class="py-4 px-6 text-slate-500">{{ $op->date_debut->format('d/m/Y H:i') }}</td>
                             <td class="py-4 px-6 text-right space-x-2">
-                                <a href="{{ route('ordre-productions.show', $op->id) }}" class="inline-flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-xs font-semibold transition-colors">
+                                <a href="{{ route('ordre-productions.show', $op) }}" class="inline-flex items-center justify-center px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-600 text-xs font-semibold transition-colors">
                                     Voir
                                 </a>
+                                @if($op->statut === 'annule')
+                                <form action="{{ route('ordre-productions.destroy', $op) }}" method="POST" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet ordre ? Cette action est irréversible.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center justify-center px-3 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-rose-600 text-xs font-semibold transition-colors">
+                                        Supprimer
+                                    </button>
+                                </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

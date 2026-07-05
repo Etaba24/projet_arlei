@@ -6,6 +6,8 @@
                 Suivi des phases : Lancement → Transformations → Conditionnement.
                 @if($op->statut === 'interrompu')
                     <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">⛔ Interrompu</span>
+                @elseif($op->statut === 'annule')
+                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700">Annulé</span>
                 @endif
             </p>
         </div>
@@ -20,13 +22,23 @@
                         class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
                     ⛔ Interrompre
                 </button>
+                <button onclick="document.getElementById('modal-annuler').classList.remove('hidden')"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-rose-50 text-rose-700 border-2 border-rose-600 text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                    Annuler l'OP
+                </button>
             @elseif(Auth::user()->hasPermission('production.reprendre') && $op->statut === 'interrompu')
-                <form action="{{ route('ordre-productions.reprendre', $op->id) }}" method="POST">
+                <form action="{{ route('ordre-productions.reprendre', $op) }}" method="POST">
                     @csrf
                     <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
                         ▶ Reprendre
                     </button>
                 </form>
+                @if(Auth::user()->hasPermission('production.interrompre'))
+                    <button onclick="document.getElementById('modal-annuler').classList.remove('hidden')"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-rose-50 text-rose-700 border-2 border-rose-600 text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                        Annuler l'OP
+                    </button>
+                @endif
             @endif
             @endif
             @if ($op->qr_code_path)
@@ -51,6 +63,7 @@
             'termine'     => 'bg-orange-100 text-orange-700',
             'valide'      => 'bg-emerald-100 text-emerald-700',
             'interrompu'  => 'bg-rose-100 text-rose-700',
+            'annule'      => 'bg-slate-200 text-slate-700',
         ];
         $statusLabels = [
             'en_attente'  => 'En attente',
@@ -58,6 +71,7 @@
             'termine'     => 'Terminée – En attente de validation',
             'valide'      => '✓ Validée',
             'interrompu'  => '⛔ Interrompue',
+            'annule'      => 'Annulée',
         ];
     @endphp
 
@@ -74,10 +88,32 @@
                 @endif
             </div>
             @if(Auth::user()->hasPermission('production.reprendre'))
-            <form action="{{ route('ordre-productions.reprendre', $op->id) }}" method="POST">
+            <form action="{{ route('ordre-productions.reprendre', $op) }}" method="POST">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition-colors">
                     ▶ Reprendre la production
+                </button>
+            </form>
+            @endif
+        </div>
+        @endif
+
+        {{-- Bannière annulation --}}
+        @if($op->statut === 'annule')
+        <div class="bg-slate-100 border border-slate-300 rounded-2xl p-5 flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-700 text-xl">×</div>
+            <div class="flex-1">
+                <p class="font-bold text-slate-800">Ordre de production annulé le {{ $op->date_interruption?->format('d/m/Y à H:i') }}</p>
+                @if($op->motif_interruption)
+                    <p class="text-sm text-slate-600 mt-1">Motif : {{ $op->motif_interruption }}</p>
+                @endif
+            </div>
+            @if(Auth::user()->hasPermission('production.interrompre'))
+            <form action="{{ route('ordre-productions.destroy', $op) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet ordre de production ? Cette action est irréversible.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition-colors whitespace-nowrap">
+                    🗑️ Supprimer
                 </button>
             </form>
             @endif
@@ -219,6 +255,7 @@
                             'valide'     => 'border-emerald-200 bg-emerald-50/50',
                             'en_cours'   => 'border-amber-200 bg-amber-50/50',
                             'interrompu' => 'border-rose-200 bg-rose-50/50',
+                            'annule'     => 'border-slate-300 bg-slate-100',
                             default      => 'border-slate-200 bg-slate-50',
                         };
                     @endphp
@@ -230,6 +267,7 @@
                                     @elseif($phase->statut === 'en_cours') ⚙️
                                     @elseif($phase->statut === 'termine') 🔔
                                     @elseif($phase->statut === 'interrompu') ⛔
+                                    @elseif($phase->statut === 'annule') ×
                                     @else ⏳ @endif
                                 </span>
                                 <div>
@@ -238,9 +276,33 @@
                                     </span>
                                     <h4 class="text-base font-bold text-slate-900 mt-1">{{ $phase->label }}</h4>
                                     <p class="text-sm text-slate-600 mt-0.5">{{ $phase->transformation?->designation ?? '—' }}</p>
+                                    @if($phase->matierePremiere)
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            📥 Entrée : <strong>{{ $phase->matierePremiere->libelle }}</strong>
+                                            @if($phase->quantite_mp_phase)
+                                                ({{ number_format($phase->quantite_mp_phase, 2) }} {{ $phase->matierePremiere->unite_mesure }})
+                                            @endif
+                                        </p>
+                                    @elseif($phase->produitSemiFini)
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            📥 Entrée : <strong>{{ $phase->produitSemiFini->designation }}</strong>
+                                            @if($phase->quantite_mp_phase)
+                                                ({{ number_format($phase->quantite_mp_phase, 2) }} {{ $phase->produitSemiFini->unite_mesure }})
+                                            @endif
+                                        </p>
+                                    @endif
+                                    @if($phase->produitSemiFiniObtenu)
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            📤 Sortie : <strong class="text-emerald-600">{{ $phase->produitSemiFiniObtenu->designation }}</strong>
+                                            @if($phase->quantite_obtenue)
+                                                ({{ number_format($phase->quantite_obtenue, 2) }} {{ $phase->produitSemiFiniObtenu->unite_mesure }})
+                                            @endif
+                                        </p>
+                                    @endif
                                 </div>
                             </div>
                             <div class="text-sm text-slate-500 space-y-1 sm:text-right">
+                                <p>Attribué le : <strong class="text-indigo-600">{{ $phase->date_attribution ? $phase->date_attribution->format('d/m/Y H:i') : '—' }}</strong></p>
                                 <p>Équipe : <strong class="text-slate-700">{{ $phase->equipe?->nom ?? '—' }}</strong></p>
                                 <p>Machine : <strong class="text-slate-700">{{ $phase->machine?->designation ?? '—' }}</strong></p>
                                 @if($phase->duree_estimee_min)
@@ -250,21 +312,24 @@
                                 @if($phase->date_fin)<p>Fin : {{ $phase->date_fin->format('d/m/Y H:i') }}</p>@endif
                             </div>
                         </div>
+                        @if($phase->observations)
+                            <div class="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 whitespace-pre-line">{{ $phase->observations }}</div>
+                        @endif
 
                         {{-- Actions selon rôle et statut --}}
-                        @if($op->statut !== 'interrompu' && $phase->statut !== 'interrompu')
+                        @if(!in_array($op->statut, ['interrompu', 'annule']) && !in_array($phase->statut, ['interrompu', 'annule']))
                         <div class="mt-4 pt-3 border-t border-slate-200/80 flex flex-wrap gap-2 justify-end">
                             {{-- Opérateur : bouton Démarrer ou Marquer Terminé --}}
                             @if(Auth::user()->isOperateur() && Auth::user()->employe && Auth::user()->employe->equipe_id === $phase->equipe_id)
                                 @if($phase->statut === 'en_attente' && $phase->phasePrecedenteEstValidee())
-                                    <form action="{{ route('phase-productions.demarrer', $phase->id) }}" method="POST">
+                                    <form action="{{ route('phase-productions.demarrer', $phase) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors">
                                             ▶ Démarrer cette étape
                                         </button>
                                     </form>
                                 @elseif($phase->statut === 'en_cours')
-                                    <form action="{{ route('phase-productions.terminer', $phase->id) }}" method="POST">
+                                    <form action="{{ route('phase-productions.terminer', $phase) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition-colors">
                                             ✓ Marquer comme terminée
@@ -275,12 +340,19 @@
 
                             {{-- Admin : bouton Valider --}}
                             @if(Auth::user()->hasPermission('production.valider-phase') && $phase->statut === 'termine')
-                                <form action="{{ route('ordre-productions.valider-phase', ['ordre_production' => $op->id, 'phase' => $phase->id]) }}" method="POST">
+                                <form action="{{ route('ordre-productions.valider-phase', ['ordre_production' => $op, 'phase' => $phase]) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
                                         ✓ Valider et débloquer l'étape suivante
                                     </button>
                                 </form>
+                                <form id="form-invalider-{{ $phase->id }}" action="{{ route('ordre-productions.invalider-phase', ['ordre_production' => $op, 'phase' => $phase]) }}" method="POST" class="hidden">
+                                     @csrf
+                                     <input type="hidden" name="motif" id="motif-invalider-{{ $phase->id }}">
+                                 </form>
+                                 <button type="button" onclick="triggerInvalidation({{ $phase->id }}, '{{ addslashes($phase->equipe?->nom ?? 'Inconnue') }}')" class="inline-flex items-center justify-center px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-colors">
+                                     Invalider
+                                 </button>
                             @endif
 
                             {{-- Message d'attente --}}
@@ -302,15 +374,29 @@
                     @php
                         $dernierePhase = $op->phaseProductions->last();
                         $peutAjouter   = !$dernierePhase || in_array($dernierePhase->statut, ['termine', 'valide']);
+                        $initiale = $op->phaseProductions->where('numero_phase', 'initiale')->first();
+                        $finale = $op->phaseProductions->where('numero_phase', 'finale')->first();
                     @endphp
 
                     @if($peutAjouter)
+                        @php
+                            $sourcesDispo = collect();
+                            if ($op->matierePremiere) {
+                                $sourcesDispo->push(['type' => 'mp', 'id' => $op->matierePremiere->id, 'libelle' => $op->matierePremiere->libelle]);
+                            }
+                            foreach($op->phaseProductions as $p) {
+                                if($p->produitSemiFiniObtenu) {
+                                    $sourcesDispo->push(['type' => 'psf', 'id' => $p->produitSemiFiniObtenu->id, 'libelle' => $p->produitSemiFiniObtenu->designation]);
+                                }
+                            }
+                            $sourcesDispo = $sourcesDispo->unique(fn($s) => $s['type'] . '-' . $s['id']);
+                        @endphp
                     <div class="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/60 p-5">
                         <h4 class="text-sm font-bold text-blue-800 mb-4 flex items-center gap-2">
                             <span class="text-lg">➕</span>
                             Ajouter une phase intermédiaire ou finale
                         </h4>
-                        <form action="{{ route('ordre-productions.add-transformation', $op->id) }}" method="POST">
+                        <form action="{{ route('ordre-productions.add-transformation', $op) }}" method="POST">
                             @csrf
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
@@ -341,6 +427,47 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 pt-4 border-t border-blue-200/50">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Matière / État à transformer</label>
+                                    <select id="input_source_select" onchange="onInputSourceChange(this)" class="w-full rounded-xl border-slate-200 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">— Héritée des lots principaux —</option>
+                                        @foreach($sourcesDispo as $src)
+                                            <option value="{{ $src['type'] }}:{{ $src['id'] }}">{{ $src['libelle'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" id="matiere_premiere_id_input" name="matiere_premiere_id" value="">
+                                    <input type="hidden" id="produit_semi_fini_id_input" name="produit_semi_fini_id" value="">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Quantité à transformer (Optionnel)</label>
+                                    <input type="number" step="0.001" name="quantite_mp_phase" placeholder="Quantité en {{ $op->matierePremiere->unite_mesure ?? 'Kg' }}" class="w-full rounded-xl border-slate-200 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Date et Heure d'Attribution <span class="text-rose-500">*</span></label>
+                                    <input type="datetime-local" id="add_phase_date_attribution" name="date_attribution" required value="{{ now()->format('Y-m-d\TH:i') }}" oninput="validerDateAjoutPhase()" class="w-full rounded-xl border-slate-200 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">État / Produit Semi-Fini Obtenu</label>
+                                    <div class="flex gap-2">
+                                        <select id="produit_semi_fini_obtenu_id_select" name="produit_semi_fini_obtenu_id" class="flex-1 rounded-xl border-slate-200 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">— Aucun (Pas de nouvel état) —</option>
+                                            @foreach($produitsSemiFinis as $psf)
+                                                <option value="{{ $psf->id }}">{{ $psf->designation }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" onclick="openQuickMatiereShow()" class="inline-flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl transition-colors border border-emerald-200 font-bold" title="Créer un nouveau produit semi-fini">
+                                            ＋
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Quantité Obtenue (Optionnelle)</label>
+                                    <input type="number" step="0.001" name="quantite_obtenue" placeholder="Quantité de matière obtenue" class="w-full rounded-xl border-slate-200 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
                             <div class="mt-4 flex items-center justify-between">
                                 <label class="flex items-center gap-2 text-sm text-blue-700 cursor-pointer">
                                     <input type="checkbox" name="is_finale" value="1" class="rounded border-blue-300 text-blue-600 focus:ring-blue-500">
@@ -352,6 +479,152 @@
                             </div>
                         </form>
                     </div>
+
+                    {{-- Quick add modal for obtained semi-finished product state --}}
+                    <div id="quick_matiere_modal" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm overflow-y-auto hidden items-center justify-center p-4">
+                        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                            <div class="bg-slate-900 px-6 py-4 flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-white uppercase tracking-wide">Nouveau Produit Semi-Fini</h3>
+                                <button type="button" onclick="closeQuickMatiereShow()" class="text-slate-400 hover:text-white transition-colors">
+                                    ✕
+                                </button>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Désignation / État obtenu <span class="text-rose-500">*</span></label>
+                                    <input type="text" id="quick_mp_libelle" placeholder="Ex : Manioc Épluché, Pâte de Manioc" class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                                <button type="button" onclick="closeQuickMatiereShow()" class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl hover:bg-white transition-colors">
+                                    Annuler
+                                </button>
+                                <button type="button" onclick="submitQuickMatiereShow()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-md">
+                                    Enregistrer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function validerDateAjoutPhase() {
+                            const dateInput = document.getElementById('add_phase_date_attribution');
+                            if (!dateInput) return;
+
+                            const selectedDate = dateInput.value;
+                            if (!selectedDate) return;
+
+                            const dateInitStr = "{{ $initiale ? $initiale->date_attribution?->format('Y-m-d\TH:i') : '' }}";
+                            const dateFinaleStr = "{{ $finale ? $finale->date_attribution?->format('Y-m-d\TH:i') : '' }}";
+
+                            if (dateInitStr && selectedDate < dateInitStr) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Date Hors Limites',
+                                    html: `La date d'attribution ne peut pas être antérieure à la phase initiale (<strong>{{ $initiale ? $initiale->date_attribution?->format('d/m/Y H:i') : '' }}</strong>).`,
+                                    confirmButtonColor: '#3b82f6',
+                                    background: '#0f172a',
+                                    color: '#fff'
+                                });
+                                dateInput.value = dateInitStr;
+                            }
+
+                            if (dateFinaleStr && selectedDate > dateFinaleStr) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Date Hors Limites',
+                                    html: `La date d'attribution ne peut pas dépasser la phase finale (<strong>{{ $finale ? $finale->date_attribution?->format('d/m/Y H:i') : '' }}</strong>).`,
+                                    confirmButtonColor: '#3b82f6',
+                                    background: '#0f172a',
+                                    color: '#fff'
+                                });
+                                dateInput.value = dateFinaleStr;
+                            }
+                        }
+
+                        function openQuickMatiereShow() {
+                            const modal = document.getElementById('quick_matiere_modal');
+                            modal.classList.remove('hidden');
+                            modal.classList.add('flex');
+                        }
+
+                        function closeQuickMatiereShow() {
+                            const modal = document.getElementById('quick_matiere_modal');
+                            modal.classList.remove('flex');
+                            modal.classList.add('hidden');
+                            document.getElementById('quick_mp_libelle').value = '';
+                        }
+
+                        function onInputSourceChange(select) {
+                            const value = select.value;
+                            const mpInput  = document.getElementById('matiere_premiere_id_input');
+                            const psfInput = document.getElementById('produit_semi_fini_id_input');
+                            if (!value) {
+                                mpInput.value = '';
+                                psfInput.value = '';
+                                return;
+                            }
+                            const [type, id] = value.split(':');
+                            if (type === 'mp') {
+                                mpInput.value = id;
+                                psfInput.value = '';
+                            } else {
+                                psfInput.value = id;
+                                mpInput.value = '';
+                            }
+                        }
+
+                        async function submitQuickMatiereShow() {
+                            const libelle = document.getElementById('quick_mp_libelle').value;
+
+                            if (!libelle) {
+                                alert('Veuillez renseigner le nom du produit semi-fini.');
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch("{{ route('produits-semi-finis.store') }}", {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        designation: libelle
+                                    })
+                                });
+
+                                if (!response.ok) {
+                                    const errData = await response.json();
+                                    if (errData.errors) {
+                                        const firstErr = Object.values(errData.errors)[0][0];
+                                        alert(firstErr);
+                                    } else {
+                                        alert("Erreur lors de la création de l'état.");
+                                    }
+                                    return;
+                                }
+
+                                const result = await response.json();
+                                if (result.success) {
+                                    const select = document.getElementById('produit_semi_fini_obtenu_id_select');
+                                    const opt = document.createElement('option');
+                                    opt.value = result.produit.id;
+                                    opt.text = result.produit.designation;
+                                    select.add(opt);
+                                    select.value = result.produit.id;
+
+                                    closeQuickMatiereShow();
+                                } else {
+                                    alert("Erreur lors de la création.");
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                alert("Erreur lors de la communication avec le serveur.");
+                            }
+                        }
+                    </script>
                     @else
                     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 flex items-center gap-2">
                         <span class="text-xl">⏳</span>
@@ -423,7 +696,7 @@
                         </div>
 
                         @if(Auth::user()->hasPermission('production.valider-conditionnement') && $op->conditionnement->statut === 'termine')
-                            <form action="{{ route('ordre-productions.valider-conditionnement', $op->id) }}" method="POST" class="mt-4">
+                            <form action="{{ route('ordre-productions.valider-conditionnement', $op) }}" method="POST" class="mt-4">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
                                     ✓ Valider le conditionnement et clôturer l'OP
@@ -434,7 +707,7 @@
 
                 @elseif($toutesValidees)
                     {{-- Formulaire de conditionnement --}}
-                    <form action="{{ route('ordre-productions.conditionner', $op->id) }}" method="POST" class="space-y-4">
+                    <form action="{{ route('ordre-productions.conditionner', $op) }}" method="POST" class="space-y-4">
                         @csrf
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -495,7 +768,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Interrompre la production</h3>
                 <p class="text-sm text-slate-500 mt-1">Cette action suspendra toutes les phases en cours.</p>
             </div>
-            <form action="{{ route('ordre-productions.interrompre', $op->id) }}" method="POST">
+            <form action="{{ route('ordre-productions.interrompre', $op) }}" method="POST">
                 @csrf
                 <div class="px-6 py-5">
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Motif (optionnel)</label>
@@ -509,6 +782,35 @@
                     </button>
                     <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-xl transition-colors">
                         ⛔ Confirmer l'interruption
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal annuler --}}
+    @if(Auth::user()->hasPermission('production.interrompre') && in_array($op->statut, ['en_cours', 'interrompu']))
+    <div id="modal-annuler" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
+            <div class="px-6 py-5 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900">Annuler l'ordre de production</h3>
+                <p class="text-sm text-slate-500 mt-1">Cette action clôture définitivement l'OP et annule les phases non validées.</p>
+            </div>
+            <form action="{{ route('ordre-productions.annuler', $op) }}" method="POST">
+                @csrf
+                <div class="px-6 py-5">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Motif <span class="text-rose-500">*</span></label>
+                    <textarea name="motif" rows="3" required placeholder="Ex : erreur de lancement, commande retirée, production abandonnée..."
+                              class="w-full rounded-xl border-slate-200 shadow-sm focus:border-slate-500 focus:ring-slate-500 text-sm"></textarea>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
+                    <button type="button" onclick="document.getElementById('modal-annuler').classList.add('hidden')"
+                            class="px-5 py-2.5 text-slate-700 text-sm font-semibold border border-slate-300 rounded-xl hover:bg-white transition-colors">
+                        Retour
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl transition-colors">
+                        Confirmer l'annulation
                     </button>
                 </div>
             </form>
