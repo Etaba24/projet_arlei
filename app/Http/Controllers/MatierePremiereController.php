@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MatierePremiere;
+use App\Models\UniteMesure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -34,8 +35,9 @@ class MatierePremiereController extends Controller
 
         $matieres = $query->orderBy('code')->paginate(10)->withQueryString();
         $totalCount = MatierePremiere::count();
+        $unites = UniteMesure::orderBy('libelle')->get();
 
-        return view('matieres-premieres.index', compact('matieres', 'totalCount'));
+        return view('matieres-premieres.index', compact('matieres', 'totalCount', 'unites'));
     }
 
     public function create()
@@ -55,7 +57,7 @@ class MatierePremiereController extends Controller
         $validated = $request->validate([
             'libelle'        => ['required', 'string', 'max:255', Rule::unique('matieres_premieres', 'libelle')->where(fn($q) => $q->where('variete', $varieteNorm))],
             'variete'        => 'nullable|string|max:255',
-            'unite_mesure'   => 'required|in:Kg,Litres,Tonnes',
+            'unite_mesure'   => 'required|string|max:255',
             'seuil_securite' => 'required|numeric|min:0',
         ], [
             'libelle.unique' => 'Cette matière première (libellé + variété) existe déjà.',
@@ -63,7 +65,18 @@ class MatierePremiereController extends Controller
 
         $validated['qte_en_stock'] = 0;
 
-        MatierePremiere::create($validated);
+        $mp = MatierePremiere::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'matiere' => [
+                    'id' => $mp->id,
+                    'libelle' => $mp->libelle,
+                    'unite' => $mp->unite_mesure
+                ]
+            ]);
+        }
 
         $request->session()->forget('_old_input');
 
@@ -93,9 +106,8 @@ class MatierePremiereController extends Controller
         $validated = $request->validate([
             'libelle'        => 'required|string|max:255',
             'variete'        => 'nullable|string|max:255',
-            'unite_mesure'   => 'required|in:Kg,Litres,Tonnes',
+            'unite_mesure'   => 'required|string|max:255',
             'seuil_securite' => 'required|numeric|min:0',
-            'qte_en_stock'   => 'required|numeric|min:0',
         ]);
 
         $matieresPremiere->update($validated);

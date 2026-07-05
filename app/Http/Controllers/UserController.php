@@ -50,18 +50,11 @@ class UserController extends Controller
             'role_id.required' => 'Veuillez sélectionner un rôle.',
         ]);
 
-        // Infer legacy role from selected custom role if needed
-        $selectedRole = $request->role_id ? Role::find($request->role_id) : null;
-        $legacyRole = $request->role;
-        if ($selectedRole && $selectedRole->hasPermission('admin.utilisateurs')) {
-            $legacyRole = 'admin';
-        }
-
+        // La colonne legacy `role` est synchronisée automatiquement par User::booted()
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => $legacyRole,
             'role_id'  => $request->role_id,
         ]);
 
@@ -101,19 +94,10 @@ class UserController extends Controller
             }
         }
 
-        // Infer legacy role from selected custom role
-        $selectedRole = $request->role_id ? Role::find($request->role_id) : null;
-        $legacyRole = $request->role;
-        if ($selectedRole && $selectedRole->hasPermission('admin.utilisateurs')) {
-            $legacyRole = 'admin';
-        } elseif ($selectedRole && !$selectedRole->hasPermission('admin.utilisateurs')) {
-            $legacyRole = 'operateur';
-        }
-
+        // La colonne legacy `role` est synchronisée automatiquement par User::booted()
         $updateData = [
             'name'    => $request->name,
             'email'   => $request->email,
-            'role'    => $legacyRole,
             'role_id' => $request->role_id ?: null,
         ];
 

@@ -12,7 +12,7 @@
     </x-slot>
 
     <div class="max-w-2xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 sm:p-8">
-        <form action="{{ route('matieres-premieres.update', ['matieres_premiere' => $matierePremiere->id]) }}" method="POST" class="space-y-6">
+        <form action="{{ route('matieres-premieres.update', ['matieres_premiere' => $matierePremiere]) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -51,11 +51,8 @@
                 </div>
 
                 <div>
-                    <label for="qte_en_stock" class="block text-sm font-semibold text-slate-700">Stock Physique <span class="text-rose-500">*</span></label>
-                    <input type="number" step="0.01" name="qte_en_stock" id="qte_en_stock" required class="mt-1 block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" value="{{ old('qte_en_stock', $matierePremiere->qte_en_stock) }}" />
-                    @error('qte_en_stock')
-                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                    @enderror
+                    <label for="qte_en_stock" class="block text-sm font-semibold text-slate-700">Stock Physique <span class="text-xs font-normal text-slate-400">(Géré par le système)</span></label>
+                    <input type="number" step="0.01" disabled class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 shadow-sm text-sm cursor-not-allowed select-none" value="{{ $matierePremiere->qte_en_stock }}" />
                 </div>
 
                 <div>

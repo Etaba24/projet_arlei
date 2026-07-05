@@ -164,7 +164,7 @@
                         <td class="py-4 px-8 font-bold">{{ $op->code }}</td>
                         <td class="py-4 px-6 text-slate-600">{{ $op->produitFini?->designation ?? 'N/A' }}</td>
                         <td class="py-4 px-6"><span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold">{{ str_replace('_', ' ', $op->statut) }}</span></td>
-                        <td class="py-4 px-6 text-right"><a href="{{ route('ordre-productions.show', $op->id) }}" class="text-emerald-600 font-bold hover:underline">Accéder</a></td>
+                        <td class="py-4 px-6 text-right"><a href="{{ route('ordre-productions.show', $op) }}" class="text-emerald-600 font-bold hover:underline">Accéder</a></td>
                     </tr>
                     @empty
                     <tr><td colspan="4" class="py-8 text-center text-slate-400">Aucun ordre en cours.</td></tr>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProduitFini;
+use App\Models\UniteMesure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -25,8 +26,9 @@ class ProduitFiniController extends Controller
 
         $produits = $query->orderBy('code')->paginate(10)->withQueryString();
         $totalCount = ProduitFini::count();
+        $unites = UniteMesure::orderBy('libelle')->get();
 
-        return view('produits-finis.index', compact('produits', 'totalCount'));
+        return view('produits-finis.index', compact('produits', 'totalCount', 'unites'));
     }
 
     public function create()
@@ -42,7 +44,7 @@ class ProduitFiniController extends Controller
 
         $validated = $request->validate([
             'designation'  => ['required', 'string', 'max:255', Rule::unique('produits_finis', 'designation')],
-            'unite_mesure' => 'required|in:Sachets,g,Kg',
+            'unite_mesure' => 'required|string|max:255',
         ], [
             'designation.unique' => 'Ce produit fini existe déjà.',
         ]);
@@ -70,8 +72,7 @@ class ProduitFiniController extends Controller
 
         $validated = $request->validate([
             'designation'  => 'required|string|max:255',
-            'unite_mesure' => 'required|in:Sachets,g,Kg',
-            'qte_en_stock' => 'required|numeric|min:0',
+            'unite_mesure' => 'required|string|max:255',
         ]);
 
         $produitFini->update($validated);

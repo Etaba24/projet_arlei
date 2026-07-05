@@ -12,7 +12,7 @@
     </x-slot>
 
     <div class="max-w-2xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 sm:p-8">
-        <form action="{{ route('fournisseurs.update', $fournisseur->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('fournisseurs.update', $fournisseur) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 

@@ -185,7 +185,7 @@
                             Utilisé dans {{ $lot->ordreProductions->count() }} OP(s)
                         </span>
                         @if($lot->ordreProductions->count() === 0)
-                        <form action="{{ route('lots.destroy', $lot->id) }}" method="POST"
+                        <form action="{{ route('lots.destroy', $lot) }}" method="POST"
                               onsubmit="return confirm('Supprimer le lot {{ $lot->code_lot }} ? Le stock MP sera décrémenté.')">
                             @csrf @method('DELETE')
                             <button type="submit" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-rose-600 font-semibold transition-colors">

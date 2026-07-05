@@ -43,9 +43,27 @@
                                 <p class="text-sm text-slate-600">Équipe: <strong>{{ $phase->equipe->nom }}</strong> | Produit: {{ $phase->ordreProduction->produitFini->designation }}</p>
                                 <p class="text-xs text-slate-500 mt-1">Terminé le: {{ $phase->date_fin->format('d/m/Y H:i') }}</p>
                             </div>
-                            <a href="{{ route('ordre-productions.show', $phase->ordreProduction->id) }}" class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors">
-                                Valider
-                            </a>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('ordre-productions.show', $phase->ordreProduction) }}" class="inline-flex items-center px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
+                                    Voir Fiche
+                                </a>
+                                @if(Auth::user()->hasPermission('production.valider-phase'))
+                                    <form action="{{ route('ordre-productions.valider-phase', ['ordre_production' => $phase->ordreProduction, 'phase' => $phase]) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors">
+                                            Valider
+                                        </button>
+                                    </form>
+
+                                    <form id="form-invalider-{{ $phase->id }}" action="{{ route('ordre-productions.invalider-phase', ['ordre_production' => $phase->ordreProduction, 'phase' => $phase]) }}" method="POST" class="hidden">
+                                        @csrf
+                                        <input type="hidden" name="motif" id="motif-invalider-{{ $phase->id }}">
+                                    </form>
+                                    <button type="button" onclick="triggerInvalidation({{ $phase->id }}, '{{ addslashes($phase->equipe?->nom ?? 'Inconnue') }}')" class="inline-flex items-center px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-colors">
+                                        Invalider
+                                    </button>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>
@@ -123,7 +141,7 @@
                                     </td>
                                     <td class="py-4 px-6 text-slate-600">{{ $op->employe->nom }}</td>
                                     <td class="py-4 px-6 text-center">
-                                        <a href="{{ route('ordre-productions.show', $op->id) }}" class="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors">
+                                        <a href="{{ route('ordre-productions.show', $op) }}" class="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg transition-colors">
                                             Voir détails
                                         </a>
                                     </td>
@@ -172,7 +190,7 @@
                                     <td class="py-4 px-6">{{ $op->employe->nom }}</td>
                                     <td class="py-4 px-6 text-slate-500">{{ $op->date_debut->format('d/m/Y H:i') }}</td>
                                     <td class="py-4 px-6 text-center">
-                                        <a href="{{ route('ordre-productions.show', $op->id) }}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
+                                        <a href="{{ route('ordre-productions.show', $op) }}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors">
                                             Détails
                                         </a>
                                     </td>

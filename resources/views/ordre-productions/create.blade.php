@@ -41,6 +41,7 @@
         'transformations' => $transformations->map(fn($t) => ['id'=>$t->id,'designation'=>$t->designation,'description'=>$t->description??''])->values(),
         'equipes'         => $equipes->map(fn($e) => ['id'=>$e->id,'nom'=>$e->nom])->values(),
         'machines'        => $machines->map(fn($m) => ['id'=>$m->id,'designation'=>$m->designation,'code'=>$m->code,'etat'=>$m->etat])->values(),
+        'produitsSemiFinis' => $produitsSemiFinis->map(fn($p) => ['id'=>$p->id,'designation'=>$p->designation])->values(),
     ];
     @endphp
 
@@ -77,9 +78,24 @@
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
                     <span class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">1</span>
-                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Produit & Cible de Production</h2>
+                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Responsable, Date & Produit Cible</h2>
                 </div>
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Responsable du lancement <span class="text-rose-500">*</span></label>
+                        <select name="employe_id" x-model="employeId" required class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+                            <option value="">Sélectionnez un employé</option>
+                            @foreach($employes as $e)
+                                <option value="{{ $e->id }}">{{ $e->nom }} {{ $e->prenom ?? '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date de début <span class="text-rose-500">*</span></label>
+                        <input type="datetime-local" name="date_debut" x-model="dateDebut"
+                               value="{{ old('date_debut', now()->format('Y-m-d\TH:i')) }}" required
+                               class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+                    </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Produit fini à produire <span class="text-rose-500">*</span></label>
                         <select name="produit_fini_id" x-model="produitFiniId" required class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
@@ -98,21 +114,6 @@
                                   x-text="produit ? produit.unite : ''"></span>
                         </div>
                         <p class="mt-1 text-xs text-slate-400">Optionnel — utilisé par la simulation pour calculer le rendement</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Responsable du lancement <span class="text-rose-500">*</span></label>
-                        <select name="employe_id" x-model="employeId" required class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                            <option value="">Sélectionnez un employé</option>
-                            @foreach($employes as $e)
-                                <option value="{{ $e->id }}">{{ $e->nom }} {{ $e->prenom ?? '' }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Date de début <span class="text-rose-500">*</span></label>
-                        <input type="datetime-local" name="date_debut" x-model="dateDebut"
-                               value="{{ old('date_debut', now()->format('Y-m-d\TH:i')) }}" required
-                               class="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
                     </div>
                 </div>
             </div>
@@ -156,6 +157,7 @@
                                         <template x-for="lot in allLots" :key="lot.id">
                                             <option :value="lot.id"
                                                     :selected="sel.lotId == lot.id"
+                                                    :disabled="selectedLots.some((other, idx) => idx !== i && other.lotId == lot.id)"
                                                     x-text="lot.code_lot + ' — ' + lot.matiere_libelle + ' (' + lot.quantite_disponible.toLocaleString('fr-FR') + ' ' + lot.matiere_unite + ') — ' + lot.qualite_label"></option>
                                         </template>
                                     </select>
@@ -212,7 +214,7 @@
                     <div class="flex items-center gap-3">
                         <span class="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">3</span>
                         <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Phases de Transformation</h2>
-                        <span class="text-xs text-slate-400">Optionnel — la 1ère est toujours initiale, la dernière finale</span>
+                        <span class="text-xs text-slate-400">Obligatoire — la 1ère est toujours initiale, la dernière finale</span>
                     </div>
                     <button type="button" @click="addPhase()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-bold rounded-lg transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -220,7 +222,7 @@
                     </button>
                 </div>
                 <div class="p-6">
-                    <div class="grid gap-4" :class="phases.length <= 3 ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'">
+                    <div class="grid gap-4" :class="phases.length <= 3 ? 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'">
                         <template x-for="(phase, i) in phases" :key="i">
                             <div class="border-2 rounded-xl overflow-hidden transition-all"
                                  :class="phase.transformationId && phase.equipeId && phase.machineId ? 'border-emerald-300' : 'border-slate-200'">
@@ -237,7 +239,7 @@
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <svg x-show="phase.transformationId && phase.equipeId && phase.machineId" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                        <button type="button" @click="removePhase(i)" x-show="phases.length > 1 && i > 0"
+                                        <button type="button" @click="removePhase(i)" x-show="i > 0 && i < phases.length - 1"
                                                 class="text-white/70 hover:text-white transition-colors">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
@@ -246,33 +248,36 @@
                                 {{-- Phase fields --}}
                                 <div class="p-4 space-y-3">
                                     <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Transformation</label>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Transformation <span class="text-rose-500">*</span></label>
                                         <select :name="'phases[' + i + '][transformation_id]'"
                                                 x-model="phase.transformationId"
+                                                required
                                                 class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
-                                            <option value="">— Aucune —</option>
+                                            <option value="">— Choisir —</option>
                                             @foreach($transformations as $t)
                                                 <option value="{{ $t->id }}">{{ $t->designation }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Équipe</label>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Équipe <span class="text-rose-500">*</span></label>
                                         <select :name="'phases[' + i + '][equipe_id]'"
                                                 x-model="phase.equipeId"
+                                                required
                                                 class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
-                                            <option value="">— Aucune —</option>
+                                            <option value="">— Choisir —</option>
                                             @foreach($equipes as $e)
                                                 <option value="{{ $e->id }}">{{ $e->nom }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Machine</label>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Machine <span class="text-rose-500">*</span></label>
                                         <select :name="'phases[' + i + '][machine_id]'"
                                                 x-model="phase.machineId"
+                                                required
                                                 class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
-                                            <option value="">— Aucune —</option>
+                                            <option value="">— Choisir —</option>
                                             @foreach($machines as $m)
                                                 <option value="{{ $m->id }}"
                                                         class="{{ $m->etat==='en_panne' ? 'text-rose-500' : ($m->etat==='arret' ? 'text-amber-600' : '') }}">
@@ -281,6 +286,81 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date et Heure d'Attribution <span class="text-rose-500">*</span></label>
+                                        <input type="datetime-local" :name="'phases[' + i + '][date_attribution]'"
+                                               x-model="phase.date_attribution"
+                                               required
+                                               @input="validerDatesPhases()"
+                                               class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Matière / État à transformer</label>
+                                        <select @change="setPhaseInputSource(i, $event.target.value)"
+                                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                            <option value="" :selected="!phase.matierePremiereId && !phase.produitSemiFiniId">— Héritée des lots principaux —</option>
+                                            <template x-for="src in getAvailableInputMatieres(i)" :key="src.type + '-' + src.id">
+                                                <option :value="src.type + ':' + src.id"
+                                                        :selected="(src.type==='mp' && phase.matierePremiereId==src.id) || (src.type==='psf' && phase.produitSemiFiniId==src.id)"
+                                                        x-text="src.libelle"></option>
+                                            </template>
+                                        </select>
+                                        <input type="hidden" :name="'phases[' + i + '][matiere_premiere_id]'" x-model="phase.matierePremiereId">
+                                        <input type="hidden" :name="'phases[' + i + '][produit_semi_fini_id]'" x-model="phase.produitSemiFiniId">
+                                    </div>
+                                    <div x-show="phase.matierePremiereId || phase.produitSemiFiniId" class="col-span-full">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Quantité à transformer (Optionnel)</label>
+                                        <input type="number" step="0.001" :name="'phases[' + i + '][quantite_mp_phase]'"
+                                               x-model="phase.quantiteMpPhase" placeholder="Quantité pour cette phase"
+                                               class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+
+                                    <!-- État / Produit Semi-Fini Obtenu (pour phases intermédiaires) -->
+                                    <div x-show="i < phases.length - 1">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">État / Produit Semi-Fini Obtenu</label>
+                                        <div class="flex gap-1.5">
+                                            <select :name="'phases[' + i + '][produit_semi_fini_obtenu_id]'"
+                                                    x-model="phase.produitSemiFiniObtenuId"
+                                                    class="block flex-1 rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                                <option value="">— Aucun (Pas de nouvel état) —</option>
+                                                <template x-for="psf in allProduitsSemiFinis" :key="psf.id">
+                                                    <option :value="psf.id" x-text="psf.designation"></option>
+                                                </template>
+                                            </select>
+                                            <button type="button" @click="quickAddPsf(i)"
+                                                    class="inline-flex items-center justify-center p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition-colors border border-emerald-200"
+                                                    title="Créer un nouveau produit semi-fini">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quantité Obtenue (pour phases intermédiaires) -->
+                                    <div x-show="i < phases.length - 1 && phase.produitSemiFiniObtenuId" class="col-span-full">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Quantité Obtenue (Optionnelle)</label>
+                                        <input type="number" step="0.001" :name="'phases[' + i + '][quantite_obtenue]'"
+                                                x-model="phase.quantiteObtenue" placeholder="Quantité de produit semi-fini obtenue"
+                                                class="block w-full rounded-lg border-slate-200 text-xs focus:border-emerald-500 focus:ring-emerald-500">
+                                    </div>
+
+                                    <!-- Produit Fini Obtenu (pour phase finale) -->
+                                    <div x-show="i === phases.length - 1">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Produit Fini Obtenu <span class="text-rose-500">*</span></label>
+                                        <input type="text" readonly :value="produit ? produit.designation : 'Veuillez sélectionner un produit fini en haut'"
+                                               class="block w-full rounded-lg border-slate-200 bg-slate-50 text-xs text-slate-600 font-bold border border-slate-300">
+                                        <input type="hidden" :name="'phases[' + i + '][produit_semi_fini_obtenu_id]'" value="">
+                                    </div>
+
+                                    <!-- Quantité Obtenue / Cible (pour phase finale) -->
+                                    <div x-show="i === phases.length - 1" class="col-span-full">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Quantité Cible <span class="text-slate-400 font-normal">(héritée)</span></label>
+                                        <input type="text" readonly :value="produit ? (quantitePfCible ? quantitePfCible + ' ' + (produit.unite_mesure || 'Kg') : 'Non spécifiée') : '—'"
+                                               class="block w-full rounded-lg border-slate-200 bg-slate-50 text-xs text-slate-500 font-medium">
+                                        <input type="hidden" :name="'phases[' + i + '][quantite_obtenue]'" value="">
+                                    </div>
+                                    </div>
+                                    <div class="col-span-full">
                                         {{-- Machine efficiency badge --}}
                                         <template x-if="getMachine(phase.machineId)">
                                             <p class="mt-1 text-[10px] font-semibold"
@@ -490,7 +570,7 @@
                                 <h2 class="text-xl font-bold text-white">Rapport de Simulation IA</h2>
                                 <span class="px-2.5 py-0.5 rounded-full bg-emerald-400/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold">ANALYSÉ</span>
                             </div>
-                            <p class="text-sm text-slate-400 mt-0.5">Estimations basées sur la qualité des lots et l'état des machines</p>
+                            <p class="text-sm text-slate-400 mt-0.5" x-text="simResults && simResults.confiance !== undefined ? 'Modèle entraîné sur ' + simResults.nHistorique + ' phase(s) réelle(s) — Monte Carlo 1 500 scénarios' : 'Estimations basées sur la qualité des lots et l\'état des machines'"></p>
                         </div>
                     </div>
                     <button @click="resetSim()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
@@ -521,6 +601,106 @@
                             <p class="text-[9px] font-black text-violet-600 uppercase tracking-widest mb-2">Rendement</p>
                             <p class="text-2xl font-black text-violet-700" x-text="simResults ? Math.round((1-simResults.totalLossRate)*100) + '%' : '—'"></p>
                             <p class="text-xs text-violet-400 mt-1" x-text="quantitePfCible && simResults ? 'Cible : ' + parseFloat(quantitePfCible).toLocaleString('fr-FR') + ' ' + (produit ? produit.unite : '') : 'Cible non définie'"></p>
+                        </div>
+                    </div>
+
+                    {{-- INTELLIGENCE PRÉDICTIVE (moteur serveur) --}}
+                    <div class="bg-slate-900 rounded-2xl p-5 space-y-5" x-show="simResults && simResults.confiance !== undefined">
+                        <div class="flex items-center justify-between">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Intelligence Prédictive — Analyse probabiliste</p>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                                  :class="simResults && simResults.confiance >= 65 ? 'bg-emerald-400/15 border-emerald-400/30 text-emerald-300' : (simResults && simResults.confiance >= 40 ? 'bg-amber-400/15 border-amber-400/30 text-amber-300' : 'bg-rose-400/15 border-rose-400/30 text-rose-300')"
+                                  x-text="simResults ? 'Confiance ' + simResults.confiance + '%' : ''"></span>
+                        </div>
+
+                        {{-- Intervalle de confiance P10–P90 --}}
+                        <div>
+                            <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+                                <span>Scénario pessimiste (P10)</span>
+                                <span class="font-bold text-white">Production probable (P50)</span>
+                                <span>Scénario optimiste (P90)</span>
+                            </div>
+                            <div class="relative h-3 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="absolute inset-y-0 bg-gradient-to-r from-amber-400/60 via-emerald-500 to-emerald-400/60 rounded-full"
+                                     :style="simResults && simResults.pfP90 ? 'left:8%; right:8%' : ''"></div>
+                            </div>
+                            <div class="flex justify-between mt-1.5" style="font-variant-numeric: tabular-nums">
+                                <span class="text-sm font-black text-amber-300" x-text="simResults && simResults.pfP10 !== undefined ? simResults.pfP10.toLocaleString('fr-FR',{maximumFractionDigits:1}) : '—'"></span>
+                                <span class="text-lg font-black text-emerald-400" x-text="simResults ? simResults.estimatedPF.toLocaleString('fr-FR',{maximumFractionDigits:1}) + ' ' + (produit ? produit.unite : '') : '—'"></span>
+                                <span class="text-sm font-black text-emerald-300" x-text="simResults && simResults.pfP90 !== undefined ? simResults.pfP90.toLocaleString('fr-FR',{maximumFractionDigits:1}) : '—'"></span>
+                            </div>
+                        </div>
+
+                        {{-- Probabilité d'atteindre la cible --}}
+                        <template x-if="simResults && simResults.probaCible !== null && simResults.probaCible !== undefined">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-slate-400">Probabilité d'atteindre la cible de <span class="text-white font-bold" x-text="parseFloat(quantitePfCible).toLocaleString('fr-FR')"></span></span>
+                                    <span class="font-black" :class="simResults.probaCible >= 0.7 ? 'text-emerald-400' : (simResults.probaCible >= 0.4 ? 'text-amber-400' : 'text-rose-400')"
+                                          x-text="Math.round(simResults.probaCible * 100) + '%'"></span>
+                                </div>
+                                <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-1000"
+                                         :class="simResults.probaCible >= 0.7 ? 'bg-emerald-500' : (simResults.probaCible >= 0.4 ? 'bg-amber-400' : 'bg-rose-500')"
+                                         :style="'width:' + Math.round(simResults.probaCible * 100) + '%'"></div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500 pt-1 border-t border-slate-700/60">
+                            <span x-text="simResults && simResults.durP90 !== undefined ? 'Durée : ' + simResults.totalDurationMin + ' min (P50) — jusqu\'à ' + simResults.durP90 + ' min (P90)' : ''"></span>
+                            <span x-text="simResults && simResults.biais !== undefined && simResults.biais !== 1 ? 'Auto-calibration : biais correctif ×' + simResults.biais : ''"></span>
+                        </div>
+                    </div>
+
+                    {{-- RISQUES DÉTECTÉS --}}
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5" x-show="simResults && simResults.risques && simResults.risques.length">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Risques détectés par le moteur</p>
+                        <div class="space-y-2">
+                            <template x-for="(r, ri) in (simResults ? simResults.risques || [] : [])" :key="ri">
+                                <div class="flex items-start gap-3 rounded-xl px-3.5 py-2.5 border"
+                                     :class="r.niveau === 'critique' ? 'bg-rose-50 border-rose-200' : (r.niveau === 'attention' ? 'bg-amber-50 border-amber-200' : 'bg-sky-50 border-sky-200')">
+                                    <span class="mt-0.5 shrink-0 w-2 h-2 rounded-full"
+                                          :class="r.niveau === 'critique' ? 'bg-rose-500' : (r.niveau === 'attention' ? 'bg-amber-500' : 'bg-sky-500')"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-bold" :class="r.niveau === 'critique' ? 'text-rose-700' : (r.niveau === 'attention' ? 'text-amber-700' : 'text-sky-700')" x-text="r.titre"></p>
+                                        <p class="text-xs text-slate-600 mt-0.5" x-text="r.detail"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- RECOMMANDATIONS --}}
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5" x-show="simResults && simResults.recommandations && simResults.recommandations.length">
+                        <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">Recommandations du moteur</p>
+                        <ul class="space-y-2">
+                            <template x-for="(reco, rci) in (simResults ? simResults.recommandations || [] : [])" :key="rci">
+                                <li class="flex items-start gap-2.5 text-xs text-emerald-900">
+                                    <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    <span x-text="reco"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+
+                    {{-- RENDEMENTS APPRIS PAR PHASE --}}
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5" x-show="simResults && simResults.phasesDetail && simResults.phasesDetail.length">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Rendements appris par phase</p>
+                        <div class="space-y-2">
+                            <template x-for="(pd, pdi) in (simResults ? simResults.phasesDetail || [] : [])" :key="pdi">
+                                <div class="flex items-center gap-4 text-xs">
+                                    <div class="flex-1 min-w-0 font-semibold text-slate-700 truncate" x-text="pd.label"></div>
+                                    <div class="w-28 shrink-0">
+                                        <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
+                                            <div class="h-full bg-emerald-500 rounded-full" :style="'width:' + Math.round(pd.rendement * 100) + '%'"></div>
+                                        </div>
+                                    </div>
+                                    <span class="w-24 text-right font-bold text-slate-800 shrink-0" style="font-variant-numeric: tabular-nums" x-text="(pd.rendement * 100).toFixed(1) + '% ±' + (pd.ecartType * 100).toFixed(1)"></span>
+                                    <span class="w-16 text-right text-slate-500 shrink-0" x-text="pd.dureeMin + ' min'"></span>
+                                    <span class="w-40 text-right text-slate-400 shrink-0 truncate" x-text="pd.source + ' (n≈' + pd.nObs + ')'"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -638,6 +818,40 @@
             </div>{{-- /complete --}}
 
         </div>{{-- /overlay --}}
+
+        {{-- ═══════════════ QUICK MATIERE/STATE MODAL ═══════════════ --}}
+        <div x-show="showQuickMatiereModal"
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-4"
+             style="display:none">
+            <div @click.away="showQuickMatiereModal = false"
+                 class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="bg-slate-950 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wide">Nouveau Produit Semi-Fini</h3>
+                    <button type="button" @click="showQuickMatiereModal = false" class="text-slate-400 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Désignation / État obtenu <span class="text-rose-500">*</span></label>
+                        <input type="text" x-model="quickMatiereLibelle" placeholder="Ex : Manioc Épluché, Pâte de Manioc"
+                               class="block w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                    <button type="button" @click="showQuickMatiereModal = false"
+                            class="px-4 py-2 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl hover:bg-white transition-colors">
+                        Annuler
+                    </button>
+                    <button type="button" @click="submitQuickMatiere()"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-md">
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>{{-- /x-data --}}
 
 
@@ -654,6 +868,7 @@
             allTransformations: data.transformations,
             allEquipes:         data.equipes,
             allMachines:        data.machines,
+            allProduitsSemiFinis: data.produitsSemiFinis || [],
 
             produitFiniId:  '',
             quantitePfCible: 0,
@@ -663,7 +878,8 @@
             selectedLots: [{ lotId: '', quantite: 0 }],
 
             phases: [
-                { transformationId: '', equipeId: '', machineId: '' },
+                { transformationId: '', equipeId: '', machineId: '', date_attribution: '{{ now()->format("Y-m-d\TH:i") }}', matierePremiereId: '', produitSemiFiniId: '', quantiteMpPhase: '', produitSemiFiniObtenuId: '', quantiteObtenue: '' },
+                { transformationId: '', equipeId: '', machineId: '', date_attribution: '{{ now()->addHours(2)->format("Y-m-d\TH:i") }}', matierePremiereId: '', produitSemiFiniId: '', quantiteMpPhase: '', produitSemiFiniObtenuId: '', quantiteObtenue: '' },
             ],
 
             showSimulation:   false,
@@ -675,6 +891,10 @@
             simResults:       null,
             _timers:          [],
 
+            showQuickMatiereModal: false,
+            quickMatiereLibelle: '',
+            quickMatierePhaseIndex: null,
+
             // ── Lookups ──
             get produit()  { return this.allProduits.find(p => p.id == this.produitFiniId) || null; },
             get totalMpQte(){ return this.selectedLots.reduce((s, l) => s + (parseFloat(l.quantite) || 0), 0); },
@@ -682,6 +902,109 @@
             getMachine(machineId) { return this.allMachines.find(m => m.id == machineId) || null; },
             getTransformation(tId){ return this.allTransformations.find(t => t.id == tId) || null; },
             machineEfficiency(etat){ return MACHINE_EFF[etat] ?? 0.8; },
+
+            get selectedMatieres() {
+                const mpMap = new Map();
+                this.selectedLots.forEach(s => {
+                    const lot = this.getLot(s.lotId);
+                    if (lot && !mpMap.has(lot.matiere_premiere_id)) {
+                        mpMap.set(lot.matiere_premiere_id, {
+                            id: lot.matiere_premiere_id,
+                            libelle: lot.matiere_libelle
+                        });
+                    }
+                });
+                return Array.from(mpMap.values());
+            },
+
+            getAvailableInputMatieres(index) {
+                const sources = [];
+                const seen = new Set();
+                // 1. Add from main lots (matières premières)
+                this.selectedLots.forEach(s => {
+                    const lot = this.getLot(s.lotId);
+                    if (lot && !seen.has('mp-' + lot.matiere_premiere_id)) {
+                        seen.add('mp-' + lot.matiere_premiere_id);
+                        sources.push({ type: 'mp', id: lot.matiere_premiere_id, libelle: lot.matiere_libelle });
+                    }
+                });
+                // 2. Add from produits semi-finis obtenus lors des phases précédentes
+                for (let k = 0; k < index; k++) {
+                    const prevPhase = this.phases[k];
+                    if (prevPhase && prevPhase.produitSemiFiniObtenuId) {
+                        const psf = this.allProduitsSemiFinis.find(p => p.id == prevPhase.produitSemiFiniObtenuId);
+                        if (psf && !seen.has('psf-' + psf.id)) {
+                            seen.add('psf-' + psf.id);
+                            sources.push({ type: 'psf', id: psf.id, libelle: psf.designation + " (Obtenu phase " + (k+1) + ")" });
+                        }
+                    }
+                }
+                return sources;
+            },
+
+            setPhaseInputSource(index, value) {
+                if (!value) {
+                    this.phases[index].matierePremiereId = '';
+                    this.phases[index].produitSemiFiniId = '';
+                    return;
+                }
+                const [type, id] = value.split(':');
+                if (type === 'mp') {
+                    this.phases[index].matierePremiereId = id;
+                    this.phases[index].produitSemiFiniId = '';
+                } else {
+                    this.phases[index].produitSemiFiniId = id;
+                    this.phases[index].matierePremiereId = '';
+                }
+            },
+
+            quickAddPsf(index) {
+                this.quickMatierePhaseIndex = index;
+                this.quickMatiereLibelle = '';
+                this.showQuickMatiereModal = true;
+            },
+
+            async submitQuickMatiere() {
+                if (!this.quickMatiereLibelle) return;
+                try {
+                    const response = await fetch("{{ route('produits-semi-finis.store') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            designation: this.quickMatiereLibelle
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        if (errData.errors) {
+                            const firstErr = Object.values(errData.errors)[0][0];
+                            alert(firstErr);
+                        } else {
+                            alert("Erreur lors de la création de l'état.");
+                        }
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.success) {
+                        this.allProduitsSemiFinis.push(result.produit);
+                        if (this.quickMatierePhaseIndex !== null) {
+                            this.phases[this.quickMatierePhaseIndex].produitSemiFiniObtenuId = result.produit.id;
+                        }
+                        this.showQuickMatiereModal = false;
+                    } else {
+                        alert("Erreur lors de la création de l'état.");
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Erreur lors de la communication avec le serveur.");
+                }
+            },
 
             get stockErrors() {
                 return this.selectedLots.filter(s => {
@@ -693,8 +1016,25 @@
             // ── Dynamic lot/phase management ──
             addLot()      { this.selectedLots.push({ lotId: '', quantite: 0 }); },
             removeLot(i)  { if (this.selectedLots.length > 1) this.selectedLots.splice(i, 1); },
-            addPhase()    { this.phases.push({ transformationId: '', equipeId: '', machineId: '' }); },
-            removePhase(i){ if (this.phases.length > 1 && i > 0) this.phases.splice(i, 1); },
+            addPhase()    {
+                const baseDate = this.phases[0].date_attribution || '{{ now()->format("Y-m-d\TH:i") }}';
+                this.phases.splice(this.phases.length - 1, 0, {
+                    transformationId: '',
+                    equipeId: '',
+                    machineId: '',
+                    date_attribution: baseDate,
+                    matierePremiereId: '',
+                    produitSemiFiniId: '',
+                    quantiteMpPhase: '',
+                    produitSemiFiniObtenuId: '',
+                    quantiteObtenue: ''
+                });
+            },
+            removePhase(i){
+                if (i > 0 && i < this.phases.length - 1) {
+                    this.phases.splice(i, 1);
+                }
+            },
 
             // ── AI Simulation Computation ──
             computeAI() {
@@ -718,14 +1058,40 @@
                 activePhasesWithMachine.forEach(phase => {
                     const m = this.getMachine(phase.machineId);
                     const eff = this.machineEfficiency(m ? m.etat : 'en_marche');
-                    totalDuration += eff > 0 ? Math.round(BASE_PHASE_MIN / eff) : BASE_PHASE_MIN * 2;
                     machineLoss += (1 - eff) * 0.04 + 0.02; // machine inefficiency + base phase loss
                 });
 
                 // Phases with no machine configured: base duration + 5% loss each
                 const phasesNoMachine = this.phases.length - activePhasesWithMachine.length;
-                totalDuration += phasesNoMachine * BASE_PHASE_MIN;
                 machineLoss   += phasesNoMachine * 0.05;
+
+                // Calculate duration based on attribution dates if both initial and final phase dates are filled
+                let dateInit = this.phases[0] ? this.phases[0].date_attribution : null;
+                let dateFinal = this.phases[this.phases.length - 1] ? this.phases[this.phases.length - 1].date_attribution : null;
+
+                if (dateInit && dateFinal) {
+                    const diffMs = new Date(dateFinal) - new Date(dateInit);
+                    const diffMin = Math.round(diffMs / 60000);
+                    if (diffMin > 0) {
+                        totalDuration = diffMin;
+                    } else {
+                        // fallback
+                        activePhasesWithMachine.forEach(phase => {
+                            const m = this.getMachine(phase.machineId);
+                            const eff = this.machineEfficiency(m ? m.etat : 'en_marche');
+                            totalDuration += eff > 0 ? Math.round(BASE_PHASE_MIN / eff) : BASE_PHASE_MIN * 2;
+                        });
+                        totalDuration += phasesNoMachine * BASE_PHASE_MIN;
+                    }
+                } else {
+                    // fallback
+                    activePhasesWithMachine.forEach(phase => {
+                        const m = this.getMachine(phase.machineId);
+                        const eff = this.machineEfficiency(m ? m.etat : 'en_marche');
+                        totalDuration += eff > 0 ? Math.round(BASE_PHASE_MIN / eff) : BASE_PHASE_MIN * 2;
+                    });
+                    totalDuration += phasesNoMachine * BASE_PHASE_MIN;
+                }
 
                 const totalLossRate = Math.min(lotLoss + machineLoss, 0.45);
                 const estimatedPF   = totalMp * (1 - totalLossRate);
@@ -739,6 +1105,65 @@
                 };
             },
 
+            validerDatesPhases() {
+                if (this.phases.length < 2) return;
+                const dInit = this.phases[0].date_attribution;
+                const dFinal = this.phases[this.phases.length - 1].date_attribution;
+
+                if (dInit && dFinal && dInit > dFinal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Chronologie Invalide',
+                        text: "La date d'attribution initiale ne peut pas dépasser la date d'attribution finale.",
+                        confirmButtonColor: '#10b981',
+                        background: '#0f172a',
+                        color: '#fff',
+                        customClass: {
+                            popup: 'rounded-3xl border border-slate-700 shadow-2xl',
+                            confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 border-none'
+                        }
+                    });
+                    this.phases[this.phases.length - 1].date_attribution = dInit;
+                }
+
+                // Check intermediate phases
+                for (let i = 1; i < this.phases.length - 1; i++) {
+                    const currentVal = this.phases[i].date_attribution;
+                    if (currentVal) {
+                        if (dInit && currentVal < dInit) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Date Hors Limites',
+                                html: `La date de la phase intermédiaire <strong>#${i}</strong> ne peut pas être antérieure à la phase initiale.`,
+                                confirmButtonColor: '#10b981',
+                                background: '#0f172a',
+                                color: '#fff',
+                                customClass: {
+                                    popup: 'rounded-3xl border border-slate-700 shadow-2xl',
+                                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 border-none'
+                                }
+                            });
+                            this.phases[i].date_attribution = dInit;
+                        }
+                        if (dFinal && currentVal > dFinal) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Date Hors Limites',
+                                html: `La date de la phase intermédiaire <strong>#${i}</strong> ne peut pas dépasser la date de la phase finale.`,
+                                confirmButtonColor: '#10b981',
+                                background: '#0f172a',
+                                color: '#fff',
+                                customClass: {
+                                    popup: 'rounded-3xl border border-slate-700 shadow-2xl',
+                                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 border-none'
+                                }
+                            });
+                            this.phases[i].date_attribution = dFinal;
+                        }
+                    }
+                }
+            },
+
             // ── Animation ──
             ts() { return new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); },
             log(msg, type='info') {
@@ -746,30 +1171,30 @@
                 this.$nextTick(() => { const el=document.getElementById('simLog'); if(el) el.scrollTop=el.scrollHeight; });
             },
 
-            lancerSimulation() {
+            async lancerSimulation() {
+                if (!this.$refs.mainForm.reportValidity()) {
+                    return;
+                }
                 this._clearTimers();
+                this._simRun          = (this._simRun || 0) + 1;
+                const runId           = this._simRun;
                 this.showSimulation   = true;
                 this.simPhase         = 'running';
                 this.animStep         = 0;
                 this.particleProgress = 0;
                 this.animLog          = [];
                 this.simResults       = null;
-                this.animCurrentLabel = 'Initialisation du moteur IA...';
+                this.animCurrentLabel = 'Connexion au moteur prédictif...';
 
-                const ai = this.computeAI();
                 const lots = this.selectedLots.filter(s => s.lotId && s.quantite > 0);
-                const configuredPhases = this.phases.filter(p => p.transformationId || p.machineId);
 
+                // Animation pendant le calcul serveur réel
                 const steps = [
-                    { t:300,  step:1, progress:0,   label:'Lecture des paramètres de production...', msg:'→ Analyse des paramètres de l\'OP en cours...', type:'info' },
-                    { t:900,  step:2, progress:0,   label:`Analyse de ${lots.length} lot(s) de matière première...`, msg:`→ ${lots.length} lot(s) MP chargé(s) pour analyse qualité`, type:'info' },
-                    { t:1700, step:3, progress:0,   label:'Évaluation de la qualité des lots...', msg:`→ Qualité pondérée des lots : perte estimée ${ai ? (ai.lotLoss*100).toFixed(1) : '?'}%`, type: ai && ai.lotLoss > 0.1 ? 'warn' : 'success' },
-                    { t:2600, step:4, progress:25,  label:'Simulation de la phase initiale...', msg:`→ [PHASE 1] ${this.phases[0] && this.getTransformation(this.phases[0].transformationId) ? this.getTransformation(this.phases[0].transformationId).designation : 'Initiale'} | Machine: ${this.phases[0] && this.getMachine(this.phases[0].machineId) ? this.getMachine(this.phases[0].machineId).designation : 'Non définie'} | Efficacité: ${this.phases[0] && this.getMachine(this.phases[0].machineId) ? Math.round(this.machineEfficiency(this.getMachine(this.phases[0].machineId).etat)*100) : '?'}%`, type:'phase' },
-                    { t:3800, step:5, progress:50,  label:`Simulation des ${Math.max(0,this.phases.length-2)} phase(s) intermédiaire(s)...`, msg:`→ Phases intermédiaires : ${this.phases.length - 2} phase(s) configurée(s)`, type:'phase' },
-                    { t:5000, step:6, progress:75,  label:'Simulation de la phase finale...', msg:`→ [PHASE FINALE] ${this.phases[this.phases.length-1] && this.getTransformation(this.phases[this.phases.length-1].transformationId) ? this.getTransformation(this.phases[this.phases.length-1].transformationId).designation : 'Non configurée'}`, type:'phase' },
-                    { t:6000, step:7, progress:85,  label:'Calcul des pertes composites...', msg:`→ IA — Perte totale estimée : ${ai ? (ai.totalLossRate*100).toFixed(1) : '?'}% (Lots: ${ai ? (ai.lotLoss*100).toFixed(1) : '?'}% + Machines: ${ai ? (ai.machineLoss*100).toFixed(1) : '?'}%)`, type:'ai' },
-                    { t:7000, step:8, progress:100, label:`Production estimée : ${ai ? ai.estimatedPF.toLocaleString('fr-FR',{maximumFractionDigits:1}) : '?'} ${this.produit ? this.produit.unite : ''}`, msg:`→ IA — PF estimé : ${ai ? ai.estimatedPF.toLocaleString('fr-FR',{maximumFractionDigits:1}) : '?'} ${this.produit ? this.produit.unite : ''} en ${ai ? ai.durationLabel : '?'}`, type:'ai' },
-                    { t:7800, step:9, progress:100, label:'Rapport de simulation généré.', msg:'✔ Simulation IA complète — rapport disponible', type:'done' },
+                    { t:300,  step:1, progress:5,  label:'Chargement de l\'historique de production...', msg:'→ Connexion au moteur prédictif serveur', type:'info' },
+                    { t:1300, step:2, progress:18, label:`Analyse de ${lots.length} lot(s) : qualité, âge, péremption...`, msg:`→ ${lots.length} lot(s) MP transmis pour analyse qualité/FIFO`, type:'info' },
+                    { t:2400, step:4, progress:38, label:'Apprentissage des rendements réels (pondération bayésienne)...', msg:'→ Agrégation des rendements historiques par transformation × machine (demi-vie 90 j)', type:'ai' },
+                    { t:3600, step:6, progress:58, label:'Auto-calibration : prédictions passées vs productions réelles...', msg:'→ Correction du biais systématique du modèle (conditionnements validés)', type:'ai' },
+                    { t:4800, step:7, progress:78, label:'Simulation Monte Carlo : 1 500 scénarios stochastiques...', msg:'→ Propagation des incertitudes sur toute la chaîne de phases', type:'ai' },
                 ];
 
                 steps.forEach(s => {
@@ -782,10 +1207,48 @@
                     this._timers.push(id);
                 });
 
-                const doneId = setTimeout(() => {
+                // Appel du moteur serveur en parallèle de l'animation
+                const payload = {
+                    lots: lots.map(s => ({ lot_id: s.lotId, quantite: parseFloat(s.quantite) })),
+                    phases: this.phases.map(p => ({
+                        transformation_id: p.transformationId || null,
+                        machine_id:        p.machineId || null,
+                    })),
+                    quantite_pf_cible: this.quantitePfCible ? parseFloat(this.quantitePfCible) : null,
+                };
+
+                const fetchPromise = fetch('{{ route('api.simulation-op') }}', {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                    },
+                    body: JSON.stringify(payload),
+                }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+                const minDelay = new Promise(res => {
+                    const id = setTimeout(res, 6000);
+                    this._timers.push(id);
+                });
+
+                const [server] = await Promise.all([fetchPromise, minDelay]);
+                if (runId !== this._simRun) return; // simulation annulée/relancée entre-temps
+
+                if (server && !server.error) {
+                    (server.trace || []).forEach(l => this.log('→ ' + l.msg, l.type || 'info'));
+                    this.log(`✔ Simulation terminée — indice de confiance ${server.confiance}% (historique : ${server.nHistorique} phase(s))`, 'done');
+                    this.simResults = server;
+                } else {
+                    this.log('⚠ Moteur serveur indisponible — repli sur l\'estimation locale simplifiée', 'warn');
                     this.simResults = this.computeAI();
-                    this.simPhase   = 'complete';
-                }, 8800);
+                }
+
+                this.animStep         = 9;
+                this.particleProgress = 100;
+                this.animCurrentLabel = 'Rapport de simulation généré.';
+
+                const doneId = setTimeout(() => { this.simPhase = 'complete'; }, 900);
                 this._timers.push(doneId);
             },
 
@@ -802,16 +1265,13 @@
 
             confirmerEtCreer() {
                 if (!this.stockErrors.length) {
-                    this.$refs.mainForm.submit();
+                    if (this.$refs.mainForm.reportValidity()) {
+                        this.$refs.mainForm.submit();
+                    }
                 }
-            },
-
-            formatDate(dt) {
-                if (!dt) return '—';
-                try { return new Date(dt).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-                catch { return dt; }
             },
         }
     }
     </script>
+
 </x-app-layout>

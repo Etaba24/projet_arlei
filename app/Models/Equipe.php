@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class Equipe extends Model
 {
+    use HasUuid;
     protected $fillable = ['code', 'nom', 'description'];
 
     /**

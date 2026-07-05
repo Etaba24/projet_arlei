@@ -1,0 +1,313 @@
+<x-app-layout>
+    <div class="space-y-6">
+
+        <x-slot name="header">
+            <div class="flex flex-col md:flex-row md:items-center w-full gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Produits Semi-Finis</h1>
+                    <p class="text-sm text-slate-500 mt-1">Catalogue des états / produits semi-finis issus des phases de transformation intermédiaires.</p>
+                </div>
+                <form method="GET" action="{{ route('produits-semi-finis.index') }}" class="relative w-full md:w-80 ml-0 md:ml-8">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           placeholder="Rechercher un produit semi-fini..."
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+                    </svg>
+                </form>
+                @if(Auth::user()->hasPermission('stocks.semi-finis'))
+                <div class="ml-auto">
+                    <label for="modal-create-toggle" class="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-emerald-600/20 transition-all cursor-pointer group">
+                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nouveau PSF
+                    </label>
+                </div>
+                @endif
+            </div>
+        </x-slot>
+
+        @if(session('status'))
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-3 text-sm font-semibold text-emerald-700">{{ session('status') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="bg-rose-50 border border-rose-200 rounded-2xl px-5 py-3 text-sm font-semibold text-rose-700">{{ session('error') }}</div>
+        @endif
+
+        {{-- ── Statistiques ── --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Produits semi-finis référencés</p>
+                <p class="text-2xl font-bold text-slate-900 mt-1" style="font-variant-numeric: tabular-nums">{{ $totalCount }}</p>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Quantité totale en stock</p>
+                <p class="text-2xl font-bold text-emerald-700 mt-1" style="font-variant-numeric: tabular-nums">{{ number_format($qteEnStock, 2, ',', ' ') }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-emerald-600">
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Code</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Désignation</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Unité</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Stock</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        @forelse ($produits as $produit)
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="px-6 py-4 font-mono text-xs font-bold text-slate-400">{{ $produit->code }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-900 capitalize">{{ $produit->designation }}</td>
+                                <td class="px-6 py-4 text-sm text-slate-500">{{ $produit->unite_mesure ?? '—' }}</td>
+                                <td class="px-6 py-4 font-bold text-slate-700">{{ number_format($produit->qte_en_stock, 2) }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <label for="edit-toggle-{{ $produit->code }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </label>
+                                    <form action="{{ route('produits-semi-finis.destroy', $produit) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </form>
+                                    <input type="checkbox" id="edit-toggle-{{ $produit->code }}" class="peer hidden" />
+                                    <div class="fixed inset-0 z-[60] hidden peer-checked:flex items-center justify-center p-4 text-left font-normal">
+                                        <label for="edit-toggle-{{ $produit->code }}" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer animate-fade-in"></label>
+
+                                        <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-modal-pop">
+                                            <div class="p-8">
+                                                <div class="flex items-center justify-between mb-8">
+                                                    <div>
+                                                        <h3 class="text-xl font-bold text-slate-900 text-left">Modifier le Produit Semi-Fini</h3>
+                                                        <p class="text-sm text-slate-500 mt-1 text-left">Édition de la référence <span class="font-mono text-emerald-600 font-bold">{{ $produit->code }}</span></p>
+                                                    </div>
+                                                    <label for="edit-toggle-{{ $produit->code }}" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer text-slate-400 transition-colors">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </label>
+                                                </div>
+
+                                                <form action="{{ route('produits-semi-finis.update', $produit) }}" method="POST" class="space-y-6">
+                                                    @csrf
+                                                    @method('PUT')
+
+                                                    <div class="space-y-4">
+                                                        <div>
+                                                            <label class="block text-sm font-bold text-slate-700 mb-2 text-left">Code Identifiant</label>
+                                                            <input type="text" disabled class="w-full rounded-2xl border-slate-200 bg-slate-50 text-slate-500 font-mono text-sm shadow-sm px-4 py-3 cursor-not-allowed select-none text-left" value="{{ $produit->code }}" />
+                                                        </div>
+
+                                                        <div>
+                                                            <label for="designation-{{ $produit->code }}" class="block text-sm font-bold text-slate-700 mb-2 text-left">Désignation / Nom du produit semi-fini <span class="text-rose-500">*</span></label>
+                                                            <input type="text" name="designation" id="designation-{{ $produit->code }}" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900" value="{{ $produit->designation }}" />
+                                                        </div>
+
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label for="unite_mesure-{{ $produit->code }}" class="block text-sm font-bold text-slate-700 mb-2 text-left">Unité de mesure</label>
+                                                                <div class="flex items-center gap-2">
+                                                                    <select name="unite_mesure" id="unite_mesure-{{ $produit->code }}" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900">
+                                                                        <option value="">— Aucune —</option>
+                                                                        @foreach($unites as $u)
+                                                                            <option value="{{ $u->libelle }}" {{ $produit->unite_mesure == $u->libelle ? 'selected' : '' }}>{{ $u->libelle }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                    <button type="button" onclick="ajouterUnite('unite_mesure-{{ $produit->code }}')" class="shrink-0 w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 rounded-xl transition-colors">
+                                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div>
+                                                                <label for="qte_en_stock-{{ $produit->code }}" class="block text-sm font-bold text-slate-700 mb-2 text-left">Stock <span class="text-xs font-normal text-slate-400">(Géré par le système)</span></label>
+                                                                <input type="number" step="0.01" disabled class="w-full rounded-2xl border-slate-200 bg-slate-50 text-slate-500 font-bold text-sm shadow-sm px-4 py-3 cursor-not-allowed select-none text-left" value="{{ $produit->qte_en_stock }}" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="flex gap-3 pt-4">
+                                                        <label for="edit-toggle-{{ $produit->code }}" class="flex-1 px-6 py-3 border border-slate-200 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 transition-all cursor-pointer text-center">
+                                                            Annuler
+                                                        </label>
+                                                        <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all">
+                                                            Enregistrer
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-12 text-center text-slate-400 font-medium italic">Aucun produit semi-fini répertorié pour l'instant.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($produits->hasPages())
+                <div class="px-6 py-4 border-t border-slate-100">
+                    {{ $produits->links() }}
+                </div>
+            @endif
+        </div>
+
+        <input type="checkbox" id="modal-create-toggle" class="peer hidden" {{ $errors->any() ? 'checked' : '' }} />
+        <div class="fixed inset-0 z-[60] hidden peer-checked:flex items-center justify-center p-4">
+            <label for="modal-create-toggle" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer animate-fade-in"></label>
+
+            <div class="relative bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-modal-pop">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Nouveau Produit Semi-Fini</h3>
+                            <p class="text-sm text-slate-500 mt-1">Le code identifiant sera généré automatiquement.</p>
+                        </div>
+                        <label for="modal-create-toggle" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer text-slate-400 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </label>
+                    </div>
+
+                    <form action="{{ route('produits-semi-finis.store') }}" method="POST" class="space-y-6">
+                        @csrf
+                        @if($errors->any())
+                            <div class="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-sm font-semibold text-rose-700">
+                                {{ $errors->first() }}
+                            </div>
+                        @endif
+                        <div class="space-y-4">
+                            <div>
+                                <label for="create-designation" class="block text-sm font-bold text-slate-700 mb-2">Désignation / Nom du produit semi-fini <span class="text-rose-500">*</span></label>
+                                <input type="text" name="designation" id="create-designation" required placeholder="ex: Manioc Épluché, Pâte de Manioc" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ old('designation') }}" />
+                            </div>
+
+                            <div>
+                                <label for="create-unite_mesure" class="block text-sm font-bold text-slate-700 mb-2">Unité de mesure (optionnel)</label>
+                                <div class="flex items-center gap-2">
+                                    <select name="unite_mesure" id="create-unite_mesure" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all">
+                                        <option value="">— Aucune —</option>
+                                        @foreach($unites as $u)
+                                            <option value="{{ $u->libelle }}">{{ $u->libelle }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" onclick="ajouterUnite('create-unite_mesure')" class="shrink-0 w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-600 rounded-xl transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 pt-4">
+                            <label for="modal-create-toggle" class="flex-1 px-6 py-3 border border-slate-200 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 transition-all cursor-pointer text-center">
+                                Annuler
+                            </label>
+                            <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all">
+                                Créer le produit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL AJOUT UNITÉ -->
+    <div id="unite-modal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4" style="z-index: 100;">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer animate-fade-in" onclick="fermerModalUnite()"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-modal-pop">
+            <div class="p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-slate-900">Nouvelle Unité</h3>
+                    <button type="button" onclick="fermerModalUnite()" class="p-2 hover:bg-slate-100 rounded-full cursor-pointer text-slate-400 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Libellé de l'unité <span class="text-rose-500">*</span></label>
+                        <input type="text" id="nouvelle-unite-libelle" placeholder="ex: Kg, Litre, Pièce..." class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" onkeydown="if(event.key === 'Enter') validerUnite()" />
+                        <p id="unite-error" class="text-rose-500 text-xs font-semibold mt-2 hidden"></p>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="fermerModalUnite()" class="flex-1 px-4 py-2.5 border border-slate-200 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 transition-all text-sm">Annuler</button>
+                        <button type="button" onclick="validerUnite()" class="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all text-sm">Ajouter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let currentSelectId = null;
+
+    function ajouterUnite(selectId) {
+        currentSelectId = selectId;
+        document.getElementById('nouvelle-unite-libelle').value = '';
+        document.getElementById('unite-error').classList.add('hidden');
+
+        const modal = document.getElementById('unite-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => document.getElementById('nouvelle-unite-libelle').focus(), 100);
+    }
+
+    function fermerModalUnite() {
+        const modal = document.getElementById('unite-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        currentSelectId = null;
+    }
+
+    function validerUnite() {
+        const input = document.getElementById('nouvelle-unite-libelle');
+        const error = document.getElementById('unite-error');
+        const nom = input.value.trim();
+
+        if (!nom) {
+            error.textContent = "Le libellé est obligatoire.";
+            error.classList.remove('hidden');
+            return;
+        }
+
+        fetch('{{ route("api.unites.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ libelle: nom })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelectorAll('select[name="unite_mesure"]').forEach(select => {
+                    let option = new Option(data.unite.libelle, data.unite.libelle);
+                    select.add(option);
+                    if (select.id === currentSelectId) {
+                        select.value = data.unite.libelle;
+                    }
+                });
+                fermerModalUnite();
+            } else {
+                error.textContent = "Erreur lors de la création de l'unité.";
+                error.classList.remove('hidden');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            error.textContent = "Cette unité existe peut-être déjà ou une erreur est survenue.";
+            error.classList.remove('hidden');
+        });
+    }
+    </script>
+</x-app-layout>

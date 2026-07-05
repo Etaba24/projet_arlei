@@ -3,20 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class PhaseProduction extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'ordre_production_id', 'transformation_id', 'equipe_id', 'machine_id',
+        'date_attribution',
+        'matiere_premiere_id', 'produit_semi_fini_id', 'quantite_mp_phase',
+        'produit_semi_fini_obtenu_id', 'quantite_obtenue',
         'numero_phase', 'ordre', 'duree_estimee_min',
         'date_debut', 'date_fin', 'statut', 'observations',
         'validated_by', 'validated_at',
     ];
 
     protected $casts = [
-        'date_debut'   => 'datetime',
-        'date_fin'     => 'datetime',
-        'validated_at' => 'datetime',
+        'date_attribution' => 'datetime',
+        'date_debut'       => 'datetime',
+        'date_fin'         => 'datetime',
+        'validated_at'     => 'datetime',
     ];
 
     public function ordreProduction() { return $this->belongsTo(OrdreProduction::class); }
@@ -24,6 +30,9 @@ class PhaseProduction extends Model
     public function equipe()          { return $this->belongsTo(Equipe::class); }
     public function machine()         { return $this->belongsTo(Machine::class); }
     public function validateur()      { return $this->belongsTo(User::class, 'validated_by'); }
+    public function matierePremiere() { return $this->belongsTo(MatierePremiere::class); }
+    public function produitSemiFini()        { return $this->belongsTo(ProduitSemiFini::class, 'produit_semi_fini_id'); }
+    public function produitSemiFiniObtenu()  { return $this->belongsTo(ProduitSemiFini::class, 'produit_semi_fini_obtenu_id'); }
 
     /**
      * Checks whether the previous phase (by ordre) is done/validated.
@@ -34,7 +43,7 @@ class PhaseProduction extends Model
 
         return PhaseProduction::where('ordre_production_id', $this->ordre_production_id)
             ->where('ordre', $this->ordre - 1)
-            ->whereIn('statut', ['valide', 'termine'])
+            ->where('statut', 'valide')
             ->exists();
     }
 
@@ -63,6 +72,29 @@ class PhaseProduction extends Model
             'validated_by' => $admin->id,
             'validated_at' => now(),
         ]);
+        return true;
+    }
+
+    public function invalider(User $admin, string $motif): bool
+    {
+        if ($this->statut !== 'termine') return false;
+
+        $note = sprintf(
+            "[%s] Phase invalidée par %s : %s",
+            now()->format('d/m/Y H:i'),
+            $admin->name,
+            $motif
+        );
+
+        $this->update([
+            'statut'       => 'en_attente',
+            'date_debut'   => null,
+            'date_fin'     => null,
+            'observations' => trim(($this->observations ? $this->observations . "\n" : '') . $note),
+            'validated_by' => null,
+            'validated_at' => null,
+        ]);
+
         return true;
     }
 

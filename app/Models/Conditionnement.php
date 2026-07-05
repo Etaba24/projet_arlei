@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class Conditionnement extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'ordre_production_id', 'equipe_id', 'type_emballage',
         'quantite_produite', 'quantite_mp_consommee', 'perte',

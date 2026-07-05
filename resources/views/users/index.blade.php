@@ -126,9 +126,9 @@
                                     {{-- Bouton Éditer --}}
                                     <button type="button"
                                             @click="
-                                                editFormAction = '{{ route('users.update', $u->id) }}';
+                                                editFormAction = '{{ route('users.update', $u) }}';
                                                 user = {
-                                                    id: '{{ $u->id }}',
+                                                    id: '{{ $u->uuid }}',
                                                     name: '{{ addslashes($u->name) }}',
                                                     email: '{{ $u->email }}',
                                                     role: '{{ $u->role }}',
@@ -144,7 +144,7 @@
 
                                     {{-- Bouton Supprimer --}}
                                     @if($u->id !== auth()->id())
-                                        <form action="{{ route('users.destroy', $u->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
+                                        <form action="{{ route('users.destroy', $u) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex items-center justify-center p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-500 hover:text-rose-700 transition-colors">

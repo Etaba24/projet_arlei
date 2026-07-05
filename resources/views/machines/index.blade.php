@@ -42,29 +42,36 @@
                                 <td class="px-6 py-4 font-mono text-xs font-bold text-slate-400">{{ $machine->code }}</td>
                                 <td class="px-6 py-4 font-semibold text-slate-900 capitalize">{{ $machine->designation }}</td>
                                 <td class="px-6 py-4">
-                                    @if($machine->etat === 'en_marche')
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            En marche
-                                        </span>
-                                    @elseif($machine->etat === 'arret')
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-300">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                            À l'arrêt
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-600/20">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                            En panne
-                                        </span>
-                                    @endif
-                                </td>
+                                     @if($machine->etat === 'en_marche')
+                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20" title="Géré par le flux de production">
+                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                             En marche
+                                         </span>
+                                     @elseif($machine->etat === 'arret')
+                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-300" title="Géré par le flux de production">
+                                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                             À l'arrêt
+                                         </span>
+                                     @else
+                                         <form action="{{ route('machines.update-state', $machine) }}" method="POST" class="inline-block">
+                                             @csrf
+                                             @method('PATCH')
+                                             <select name="etat" onchange="this.form.submit()" 
+                                                     class="rounded-lg border-slate-200 text-xs font-bold focus:border-emerald-500 focus:ring-emerald-500 py-1 pl-2 pr-8 bg-white cursor-pointer shadow-sm
+                                                            {{ $machine->etat === 'pret' ? 'text-teal-700 border-teal-200 bg-teal-50' : ($machine->etat === 'en_maintenance' ? 'text-amber-700 border-amber-200 bg-amber-50' : 'text-rose-700 border-rose-200 bg-rose-50') }}">
+                                                 <option value="pret" class="text-slate-900 bg-white" {{ $machine->etat === 'pret' ? 'selected' : '' }}>Prête / Disponible</option>
+                                                 <option value="en_panne" class="text-slate-900 bg-white" {{ $machine->etat === 'en_panne' ? 'selected' : '' }}>En panne</option>
+                                                 <option value="en_maintenance" class="text-slate-900 bg-white" {{ $machine->etat === 'en_maintenance' ? 'selected' : '' }}>En maintenance</option>
+                                             </select>
+                                         </form>
+                                     @endif
+                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <label for="edit-toggle-{{ $machine->code }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         
                                     </label>
-                                    <form action="{{ route('machines.destroy', $machine->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
+                                    <form action="{{ route('machines.destroy', $machine) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors">
@@ -88,7 +95,7 @@
                                                     </label>
                                                 </div>
 
-                                                <form action="{{ route('machines.update', $machine->id) }}" method="POST" class="space-y-6">
+                                                <form action="{{ route('machines.update', $machine) }}" method="POST" class="space-y-6">
                                                     @csrf
                                                     @method('PUT')
 
@@ -104,12 +111,18 @@
                                                         </div>
 
                                                         <div>
-                                                            <label for="etat-{{ $machine->code }}" class="block text-sm font-bold text-slate-700 mb-2">État de fonctionnement <span class="text-rose-500">*</span></label>
-                                                            <select name="etat" id="etat-{{ $machine->code }}" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900">
-                                                                <option value="en_marche" {{ $machine->etat == 'en_marche' ? 'selected' : '' }}>En marche / Prête</option>
-                                                                <option value="arret" {{ $machine->etat == 'arret' ? 'selected' : '' }}>À l'arrêt</option>
-                                                                <option value="en_panne" {{ $machine->etat == 'en_panne' ? 'selected' : '' }}>En panne (Maintenance)</option>
-                                                            </select>
+                                                            <label class="block text-sm font-bold text-slate-700 mb-2">État de fonctionnement <span class="text-rose-500">*</span></label>
+                                                            @if(in_array($machine->etat, ['en_marche', 'arret']))
+                                                                <input type="text" disabled class="w-full rounded-2xl border-slate-200 bg-slate-50 text-slate-500 text-sm shadow-sm px-4 py-3 cursor-not-allowed select-none" 
+                                                                       value="{{ $machine->etat === 'en_marche' ? 'En marche (Géré par la production)' : 'À l\'arrêt (Géré par la production)' }}" />
+                                                                <input type="hidden" name="etat" value="{{ $machine->etat }}" />
+                                                            @else
+                                                                <select name="etat" id="etat-{{ $machine->code }}" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-slate-900">
+                                                                    <option value="pret" {{ $machine->etat == 'pret' ? 'selected' : '' }}>Prête / Disponible</option>
+                                                                    <option value="en_panne" {{ $machine->etat == 'en_panne' ? 'selected' : '' }}>En panne</option>
+                                                                    <option value="en_maintenance" {{ $machine->etat == 'en_maintenance' ? 'selected' : '' }}>En maintenance</option>
+                                                                </select>
+                                                            @endif
                                                         </div>
                                                     </div>
 
@@ -175,9 +188,9 @@
                             <div>
                                 <label for="create-etat" class="block text-sm font-bold text-slate-700 mb-2">État de fonctionnement initial <span class="text-rose-500">*</span></label>
                                 <select name="etat" id="create-etat" required class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all">
-                                    <option value="en_marche">En marche / Prête</option>
-                                    <option value="arret">À l'arrêt</option>
-                                    <option value="en_panne">En panne (Maintenance)</option>
+                                    <option value="pret">Prête / Disponible</option>
+                                    <option value="en_panne">En panne</option>
+                                    <option value="en_maintenance">En maintenance</option>
                                 </select>
                             </div>
                         </div>

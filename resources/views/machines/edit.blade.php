@@ -12,7 +12,7 @@
     </x-slot>
 
     <div class="max-w-2xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 sm:p-8">
-        <form action="{{ route('machines.update', $machine->id) }}" method="POST" class="space-y-6">
+        <form action="{{ route('machines.update', $machine) }}" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -30,12 +30,18 @@
             </div>
 
             <div>
-                <label for="etat" class="block text-sm font-semibold text-slate-700">État de fonctionnement <span class="text-rose-500">*</span></label>
-                <select name="etat" id="etat" required class="mt-1 block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                    <option value="en_marche" {{ old('etat', $machine->etat) == 'en_marche' ? 'selected' : '' }}>En marche / Prête</option>
-                    <option value="arret" {{ old('etat', $machine->etat) == 'arret' ? 'selected' : '' }}>À l'arrêt</option>
-                    <option value="en_panne" {{ old('etat', $machine->etat) == 'en_panne' ? 'selected' : '' }}>En panne (Maintenance)</option>
-                </select>
+                <label class="block text-sm font-semibold text-slate-700">État de fonctionnement <span class="text-rose-500">*</span></label>
+                @if(in_array($machine->etat, ['en_marche', 'arret']))
+                    <input type="text" disabled class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 shadow-sm text-sm cursor-not-allowed select-none" 
+                           value="{{ $machine->etat === 'en_marche' ? 'En marche (Géré par la production)' : 'À l\'arrêt (Géré par la production)' }}" />
+                    <input type="hidden" name="etat" value="{{ $machine->etat }}" />
+                @else
+                    <select name="etat" id="etat" required class="mt-1 block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+                        <option value="pret" {{ old('etat', $machine->etat) == 'pret' ? 'selected' : '' }}>Prête / Disponible</option>
+                        <option value="en_panne" {{ old('etat', $machine->etat) == 'en_panne' ? 'selected' : '' }}>En panne</option>
+                        <option value="en_maintenance" {{ old('etat', $machine->etat) == 'en_maintenance' ? 'selected' : '' }}>En maintenance</option>
+                    </select>
+                @endif
                 @error('etat')
                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                 @enderror

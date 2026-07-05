@@ -60,7 +60,7 @@
                             </div>
                             
                             <div class="mt-5 pt-4 border-t border-slate-100 flex gap-2">
-                                <form action="{{ route('phase-productions.terminer', $tache->id) }}" method="POST" class="w-full">
+                                <form action="{{ route('phase-productions.terminer', $tache) }}" method="POST" class="w-full">
                                     @csrf
                                     <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@
                             </div>
                             
                             <div class="mt-5 pt-4 border-t border-slate-100">
-                                <form action="{{ route('phase-productions.demarrer', $tache->id) }}" method="POST">
+                                <form action="{{ route('phase-productions.demarrer', $tache) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
                                     @foreach($historique as $h)
                                         <tr class="hover:bg-slate-50 transition-colors">
                                             <td class="py-3 px-4 font-bold text-slate-800">
-                                                <a href="{{ route('ordre-productions.show', $h->ordreProduction->id) }}" class="hover:text-emerald-600 transition-colors">
+                                                <a href="{{ route('ordre-productions.show', $h->ordreProduction) }}" class="hover:text-emerald-600 transition-colors">
                                                     {{ $h->ordreProduction->code }}
                                                 </a>
                                             </td>

@@ -132,10 +132,10 @@
                                 <td class="py-4 px-6 text-right space-x-2 whitespace-nowrap">
                                     <button type="button" 
                                             @click="
-                                                editFormAction = '{{ route('employes.update', $emp->id) }}';
+                                                editFormAction = '{{ route('employes.update', $emp) }}';
                                                 employe = {
                                                     matricule: '{{ $emp->matricule }}',
-                                                    id: '{{ $emp->id }}',
+                                                    id: '{{ $emp->uuid }}',
                                                     nom: '{{ addslashes($emp->nom) }}',
                                                     prenom: '{{ addslashes($emp->prenom) }}',
                                                     residence: '{{ addslashes($emp->residence) }}',
@@ -154,7 +154,7 @@
                                         </svg>
                                     </button>
                                     
-                                    <form action="{{ route('employes.destroy', $emp->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
+                                    <form action="{{ route('employes.destroy', $emp) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center justify-center p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-500 hover:text-rose-700 transition-colors">

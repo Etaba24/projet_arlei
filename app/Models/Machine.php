@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class Machine extends Model
 {
+    use HasUuid;
     protected $fillable = ['code', 'designation', 'etat'];
 
     /**
@@ -27,7 +29,7 @@ class Machine extends Model
      */
     public function estDisponible(): bool
     {
-        return $this->etat === 'en_marche';
+        return in_array($this->etat, ['pret', 'en_marche']);
     }
 
     /**

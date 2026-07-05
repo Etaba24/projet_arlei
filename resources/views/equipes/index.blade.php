@@ -67,7 +67,7 @@
                                         <div class="text-xs text-slate-400">{{ $dep->description }}</div>
                                     </td>
                                     <td class="py-4 px-6 text-right">
-                                        <form action="{{ route('equipes.destroy', $dep->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
+                                        <form action="{{ route('equipes.destroy', $dep) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
                                             @csrf
                                             @method('DELETE')
                                             <input type="hidden" name="type" value="departement" />
@@ -138,7 +138,7 @@
                                         <div class="text-xs text-slate-400">{{ $eq->description }}</div>
                                     </td>
                                     <td class="py-4 px-6 text-right">
-                                        <form action="{{ route('equipes.destroy', $eq->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
+                                        <form action="{{ route('equipes.destroy', $eq) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this);">
                                             @csrf
                                             @method('DELETE')
                                             <input type="hidden" name="type" value="equipe" />

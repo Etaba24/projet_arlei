@@ -5,10 +5,12 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Traits\HasUuid;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use HasUuid;
     use HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'password', 'role', 'role_id'];
@@ -21,6 +23,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
         ];
+    }
+
+    /**
+     * Le rôle personnalisé (role_id) est la seule source de vérité :
+     * la colonne legacy `role` est recalculée automatiquement à chaque
+     * sauvegarde pour ne jamais se désynchroniser.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->role_id) {
+                $role = Role::with('permissions')->find($user->role_id);
+                $user->role = $role && $role->hasPermission('admin.utilisateurs')
+                    ? 'admin'
+                    : 'operateur';
+            }
+        });
     }
 
     public function employe()

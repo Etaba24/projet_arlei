@@ -141,7 +141,7 @@
                                 </svg>
                             </button>
                             {{-- Edit --}}
-                            <button onclick="openEditModal({{ $role->id }}, '{{ addslashes($role->name) }}', '{{ $role->couleur }}', '{{ addslashes($role->description ?? '') }}', {{ $role->permissions->pluck('id')->toJson() }})"
+                            <button onclick="openEditModal('{{ $role->uuid }}', '{{ addslashes($role->name) }}', '{{ $role->couleur }}', '{{ addslashes($role->description ?? '') }}', {{ $role->permissions->pluck('id')->toJson() }})"
                                     title="Modifier"
                                     class="p-2 rounded-xl text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

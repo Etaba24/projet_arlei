@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class ProduitFini extends Model
 {
+    use HasUuid;
     protected $table = 'produits_finis';
 
     protected $fillable = ['code', 'designation', 'qte_en_stock', 'unite_mesure'];

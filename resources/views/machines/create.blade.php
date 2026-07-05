@@ -26,9 +26,9 @@
             <div>
                 <label for="etat" class="block text-sm font-semibold text-slate-700">État de fonctionnement initial <span class="text-rose-500">*</span></label>
                 <select name="etat" id="etat" required class="mt-1 block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
-                    <option value="en_marche" {{ old('etat') == 'en_marche' ? 'selected' : '' }}>En marche / Prête</option>
-                    <option value="arret" {{ old('etat') == 'arret' ? 'selected' : '' }}>À l'arrêt</option>
-                    <option value="en_panne" {{ old('etat') == 'en_panne' ? 'selected' : '' }}>En panne (Maintenance)</option>
+                    <option value="pret" {{ old('etat') == 'pret' ? 'selected' : '' }}>Prête / Disponible</option>
+                    <option value="en_panne" {{ old('etat') == 'en_panne' ? 'selected' : '' }}>En panne</option>
+                    <option value="en_maintenance" {{ old('etat') == 'en_maintenance' ? 'selected' : '' }}>En maintenance</option>
                 </select>
                 @error('etat')
                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>

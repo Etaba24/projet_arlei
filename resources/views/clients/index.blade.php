@@ -60,7 +60,7 @@
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         
                                     </label>
-                                    <form action="{{ route('clients.destroy', $client->id) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
+                                    <form action="{{ route('clients.destroy', $client) }}" method="POST" class="inline" onsubmit="confirmDelete(event, this)">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors">
@@ -84,7 +84,7 @@
                                                     </label>
                                                 </div>
 
-                                                <form action="{{ route('clients.update', $client->id) }}" method="POST" class="space-y-6">
+                                                <form action="{{ route('clients.update', $client) }}" method="POST" class="space-y-6">
                                                     @csrf
                                                     @method('PUT')
 

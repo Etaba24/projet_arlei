@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Employe;
 use App\Models\Departement;
 use App\Models\Equipe;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class EmployeController extends Controller
@@ -40,9 +43,10 @@ class EmployeController extends Controller
         $departements = Departement::all();
         $equipes = Equipe::all();
         $users = User::all();
+        $roles = Role::orderBy('name')->get();
 
         // 3. Envoyer le tout à la vue unique index.blade.php
-        return view('employes.index', compact('employes', 'departements', 'equipes', 'users', 'totalCount'));
+        return view('employes.index', compact('employes', 'departements', 'equipes', 'users', 'roles', 'totalCount'));
     }
 
     public function create()
@@ -66,7 +70,7 @@ class EmployeController extends Controller
 
         $prenomNorm = mb_strtolower(trim($request->prenom ?? ''));
 
-        $request->validateWithBag('create', [
+        $validated = $request->validateWithBag('create', [
             'nom'            => ['required', 'string', 'max:255', Rule::unique('employes', 'nom')->where(fn($q) => $q->where('prenom', $prenomNorm))],
             'prenom'         => 'required|string|max:255',
             'residence'      => 'nullable|string|max:255',
@@ -76,28 +80,33 @@ class EmployeController extends Controller
             'departement_id' => 'required|exists:departements,id',
             'equipe_id'      => 'required|exists:equipes,id',
             'user_id'        => 'nullable|exists:users,id|unique:employes,user_id',
-            'password'       => 'nullable|string|min:6',
         ], [
             'nom.unique' => 'Un employé avec ce nom et ce prénom existe déjà.',
         ]);
-
-        $userData = $request->all();
 
         if ($request->boolean('create_user_account')) {
             $request->validateWithBag('create', [
                 'email'    => 'required|email|max:255|unique:users,email',
                 'password' => 'required|string|min:6',
+                'role_id'  => 'required|exists:roles,id',
+            ], [
+                'role_id.required' => 'Veuillez sélectionner un rôle pour le nouveau compte.',
             ]);
-            $user = User::create([
-                'name'     => $request->prenom . ' ' . $request->nom,
-                'email'    => $request->email,
-                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-                'role'     => 'operateur',
-            ]);
-            $userData['user_id'] = $user->id;
         }
 
-        Employe::create($userData);
+        DB::transaction(function () use ($request, $validated) {
+            if ($request->boolean('create_user_account')) {
+                $user = User::create([
+                    'name'     => $request->prenom . ' ' . $request->nom,
+                    'email'    => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role_id'  => $request->role_id,
+                ]);
+                $validated['user_id'] = $user->id;
+            }
+
+            Employe::create($validated);
+        });
 
         return redirect()->route('employes.index')
             ->with('status', 'Employé créé avec succès.');
@@ -105,14 +114,8 @@ class EmployeController extends Controller
 
     public function edit(Employe $employe)
     {
-        $departements = Departement::orderBy('designation')->get();
-        $equipes = Equipe::orderBy('nom')->get();
-        // Récupérer les utilisateurs libres ou déjà liés à cet employé
-        $users = User::whereDoesntHave('employe', function ($query) use ($employe) {
-            $query->where('id', '!=', $employe->id);
-        })->orderBy('name')->get();
-
-        return view('employes.index', compact('employe', 'departements', 'equipes', 'users'));
+        // L'édition se fait via le modal de la page index.
+        return redirect()->route('employes.index');
     }
 
     public function update(Request $request, Employe $employe)
@@ -126,7 +129,7 @@ class EmployeController extends Controller
 
         $prenomNorm = mb_strtolower(trim($request->prenom ?? ''));
 
-        $request->validateWithBag('edit', [
+        $validated = $request->validateWithBag('edit', [
             'nom'            => ['required', 'string', 'max:255', Rule::unique('employes', 'nom')->where(fn($q) => $q->where('prenom', $prenomNorm))->ignore($employe->id)],
             'prenom'         => 'required|string|max:255',
             'residence'      => 'nullable|string|max:255',
@@ -136,55 +139,59 @@ class EmployeController extends Controller
             'departement_id' => 'required|exists:departements,id',
             'equipe_id'      => 'required|exists:equipes,id',
             'user_id'        => 'nullable|exists:users,id|unique:employes,user_id,' . $employe->id,
-            'password'       => 'nullable|string|min:6',
         ], [
             'nom.unique' => 'Un employé avec ce nom et ce prénom existe déjà.',
         ]);
 
-        $userData = $request->all();
-
         // Si l'employé n'avait pas de compte utilisateur et qu'on demande d'en créer un
-        if (!$employe->user_id && $request->boolean('create_user_account')) {
+        $creerCompte = !$employe->user_id && $request->boolean('create_user_account');
+        if ($creerCompte) {
             $request->validateWithBag('edit', [
                 'email'    => 'required|email|max:255|unique:users,email',
                 'password' => 'required|string|min:6',
+                'role_id'  => 'required|exists:roles,id',
+            ], [
+                'role_id.required' => 'Veuillez sélectionner un rôle pour le nouveau compte.',
             ]);
-            $user = User::create([
-                'name'     => $request->prenom . ' ' . $request->nom,
-                'email'    => $request->email,
-                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-                'role'     => 'operateur',
-            ]);
-            $userData['user_id'] = $user->id;
         }
 
-        $employe->update($userData);
+        // Si un compte est lié, vérifier l'unicité de l'email avant toute écriture
+        if ($employe->user_id && $request->filled('email')) {
+            $newEmail = mb_strtolower(trim($request->email));
+            if (User::where('email', $newEmail)->where('id', '!=', $employe->user_id)->exists()) {
+                return redirect()->back()
+                    ->with('error', 'L\'adresse email « ' . $newEmail . ' » est déjà utilisée par un autre compte.')
+                    ->withInput();
+            }
+        }
 
-        // Si l'utilisateur est lié, synchroniser son compte
-        if ($employe->user) {
-            $updateData = [];
+        DB::transaction(function () use ($request, $employe, $validated, $creerCompte) {
+            if ($creerCompte) {
+                $user = User::create([
+                    'name'     => $request->prenom . ' ' . $request->nom,
+                    'email'    => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role_id'  => $request->role_id,
+                ]);
+                $validated['user_id'] = $user->id;
+            }
 
-            if ($request->filled('email')) {
-                $newEmail = mb_strtolower(trim($request->email));
-                // Vérifier unicité en excluant l'utilisateur courant
-                if (\App\Models\User::where('email', $newEmail)->where('id', '!=', $employe->user->id)->exists()) {
-                    return redirect()->back()
-                        ->with('error', 'L\'adresse email « ' . $newEmail . ' » est déjà utilisée par un autre compte.')
-                        ->withInput();
+            $employe->update($validated);
+
+            // Si un compte existant est lié, synchroniser nom / email / mot de passe
+            if (!$creerCompte && $employe->user) {
+                $updateData = [
+                    'name' => $request->prenom . ' ' . $request->nom,
+                ];
+                if ($request->filled('email')) {
+                    $updateData['email'] = mb_strtolower(trim($request->email));
                 }
-                $updateData['email'] = $newEmail;
-            }
-
-            if ($request->filled('nom') || $request->filled('prenom')) {
-                $updateData['name'] = $request->prenom . ' ' . $request->nom;
-            }
-            if ($request->filled('password')) {
-                $updateData['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
-            }
-            if (!empty($updateData)) {
+                if ($request->filled('password')) {
+                    $updateData['password'] = Hash::make($request->password);
+                }
                 $employe->user->update($updateData);
             }
-        }
+        });
 
         return redirect()->route('employes.index')
             ->with('status', 'Employé mis à jour avec succès.');

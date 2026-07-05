@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class Fournisseur extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'code', 'designation', 'nationalite', 'localite',
         'raison_sociale', 'telephone', 'email',

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class LotMatierePremiere extends Model
 {
+    use HasUuid;
     protected $table = 'lots_matieres_premieres';
 
     protected $fillable = [

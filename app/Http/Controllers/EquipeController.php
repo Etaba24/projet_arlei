@@ -92,17 +92,17 @@ class EquipeController extends Controller
             ->with('status', 'Équipe mise à jour avec succès.');
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, $uuid)
     {
         if ($request->input('type') === 'departement') {
-            $dep = Departement::findOrFail($id);
+            $dep = Departement::where('uuid', $uuid)->firstOrFail();
             if ($dep->employes()->exists()) {
                 return redirect()->route('equipes.index')->with('error', 'Impossible de supprimer ce département car il contient des employés.');
             }
             $dep->delete();
             return redirect()->route('equipes.index')->with('status', 'Département supprimé avec succès.');
         } else {
-            $eq = Equipe::findOrFail($id);
+            $eq = Equipe::where('uuid', $uuid)->firstOrFail();
             if ($eq->employes()->exists() || $eq->phaseProductions()->exists() || $eq->conditionnements()->exists()) {
                 return redirect()->route('equipes.index')->with('error', 'Impossible de supprimer cette équipe car elle est liée à des employés ou des tâches de production.');
             }

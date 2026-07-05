@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 
 class OrdreProduction extends Model
 {
+    use HasUuid;
     protected $fillable = [
         'code', 'produit_fini_id', 'matiere_premiere_id', 'employe_id',
         'quantite_mp_injectee', 'quantite_pf_cible', 'quantite_pf_estimee',
@@ -68,6 +70,37 @@ class OrdreProduction extends Model
 
     /* ── Business logic ── */
 
+    /**
+     * Reordonner les phases :
+     * - Phase 'initiale' est la première (ordre = 1).
+     * - Phase 'finale' est la dernière (ordre = total_phases).
+     * - Les phases 'intermediaire' sont triées par date_attribution croissante.
+     */
+    public function reordonnerPhases()
+    {
+        $phases = $this->phaseProductions()->get();
+        if ($phases->isEmpty()) return;
+
+        $initiale = $phases->where('numero_phase', 'initiale')->first();
+        $finale = $phases->where('numero_phase', 'finale')->first();
+        $intermediaires = $phases->where('numero_phase', 'intermediaire')
+                                 ->sortBy('date_attribution')
+                                 ->values();
+
+        $ordre = 1;
+        if ($initiale) {
+            $initiale->update(['ordre' => $ordre++]);
+        }
+
+        foreach ($intermediaires as $p) {
+            $p->update(['ordre' => $ordre++]);
+        }
+
+        if ($finale) {
+            $finale->update(['ordre' => $ordre++]);
+        }
+    }
+
     public function toutesLesPhasesSontValidees(): bool
     {
         $phases = $this->phaseProductions()->get();
@@ -123,6 +156,23 @@ class OrdreProduction extends Model
         $this->phaseProductions()
              ->where('statut', 'interrompu')
              ->update(['statut' => 'en_attente']);
+
+        return true;
+    }
+
+    public function annuler(string $motif = ''): bool
+    {
+        if (!in_array($this->statut, ['en_attente', 'en_cours', 'interrompu'])) return false;
+
+        $this->update([
+            'statut'             => 'annule',
+            'date_interruption'  => now(),
+            'motif_interruption' => $motif,
+        ]);
+
+        $this->phaseProductions()
+             ->whereIn('statut', ['en_attente', 'en_cours', 'termine'])
+             ->update(['statut' => 'annule']);
 
         return true;
     }

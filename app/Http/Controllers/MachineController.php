@@ -42,7 +42,7 @@ class MachineController extends Controller
 
         $request->validate([
             'designation' => ['required', 'string', 'max:255', Rule::unique('machines', 'designation')],
-            'etat'        => 'required|in:en_marche,en_panne,arret',
+            'etat'        => 'required|in:pret,en_marche,arret,en_panne,en_maintenance',
         ], [
             'designation.unique' => 'Cette machine existe déjà.',
         ]);
@@ -70,7 +70,7 @@ class MachineController extends Controller
 
         $request->validate([
             'designation' => 'required|string|max:255',
-            'etat'        => 'required|in:en_marche,en_panne,arret',
+            'etat'        => 'required|in:pret,en_marche,arret,en_panne,en_maintenance',
         ]);
 
         $machine->update($request->only(['designation', 'etat']));
@@ -90,5 +90,17 @@ class MachineController extends Controller
 
         return redirect()->route('machines.index')
             ->with('status', 'Machine supprimée avec succès.');
+    }
+
+    public function updateState(Request $request, Machine $machine)
+    {
+        $request->validate([
+            'etat' => 'required|in:pret,en_panne,en_maintenance',
+        ]);
+
+        $machine->update(['etat' => $request->etat]);
+
+        return redirect()->route('machines.index')
+            ->with('status', 'État de la machine mis à jour avec succès.');
     }
 }

@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasUuid;
 use Illuminate\Support\Str;
 
 class Role extends Model
 {
+    use HasUuid;
     protected $fillable = ['name', 'slug', 'couleur', 'description', 'is_system'];
 
     protected $casts = ['is_system' => 'boolean'];
