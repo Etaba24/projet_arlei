@@ -20,6 +20,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SimulationController;
 use App\Http\Controllers\TypeConditionnementController;
 use App\Http\Controllers\UniteMesureController;
+use App\Http\Controllers\RapportController;
 use Illuminate\Support\Facades\Route;
 
 foreach ([
@@ -46,6 +47,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── Opérateur terrain : démarrer / terminer une phase ──
     Route::post('/phase-productions/{phase}/demarrer', [PhaseProductionController::class, 'demarrer'])->name('phase-productions.demarrer');
     Route::post('/phase-productions/{phase}/terminer', [PhaseProductionController::class, 'terminer'])->name('phase-productions.terminer');
+
+    // Rapports (opérateurs et admins)
+    Route::get('/rapports', [RapportController::class, 'index'])->name('rapports.index');
+    Route::get('/rapports/create', [RapportController::class, 'create'])->name('rapports.create');
+    Route::post('/rapports', [RapportController::class, 'store'])->name('rapports.store');
+    Route::get('/rapports/{rapport}', [RapportController::class, 'show'])->name('rapports.show');
 
     // Scan & consultation OP (opérateur peut voir sa fiche)
     Route::post('/ordre-productions/scan', [OrdreProductionController::class, 'scan'])->name('ordre-productions.scan');

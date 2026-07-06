@@ -18,9 +18,9 @@
                 {{-- Combo box de statut --}}
                 <select name="statut" onchange="this.form.submit()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all cursor-pointer">
                     <option value="">Tous les statuts</option>
-                    <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option>
+                    <!-- <option value="en_attente" {{ request('statut') === 'en_attente' ? 'selected' : '' }}>En attente</option> -->
                     <option value="en_cours" {{ request('statut') === 'en_cours' ? 'selected' : '' }}>En cours</option>
-                    <option value="conditionne" {{ request('statut') === 'conditionne' ? 'selected' : '' }}>Conditionné</option>
+                    <!-- <option value="conditionne" {{ request('statut') === 'conditionne' ? 'selected' : '' }}>Conditionné</option> -->
                     <option value="termine" {{ request('statut') === 'termine' ? 'selected' : '' }}>Terminé</option>
                     <option value="interrompu" {{ request('statut') === 'interrompu' ? 'selected' : '' }}>Interrompu</option>
                     <option value="annule" {{ request('statut') === 'annule' ? 'selected' : '' }}>Annulé</option>

@@ -12,6 +12,7 @@ use App\Models\Employe;
 use App\Models\Departement;
 use App\Models\Transformation;
 use App\Models\PhaseProduction;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -128,6 +129,7 @@ class DashboardController extends Controller
                 'equipe' => null,
                 'tachesAfaire' => collect(),
                 'tachesEnCours' => collect(),
+                'historique' => new LengthAwarePaginator([], 0, 8, 1),
             ]);
         }
 
@@ -138,7 +140,7 @@ class DashboardController extends Controller
                 'equipe'       => null,
                 'tachesAfaire' => collect(),
                 'tachesEnCours'=> collect(),
-                'historique'   => collect(),
+                'historique'   => new LengthAwarePaginator([], 0, 8, 1),
             ]);
         }
 
@@ -158,8 +160,7 @@ class DashboardController extends Controller
             ->where('equipe_id', $equipe->id)
             ->whereIn('statut', ['termine', 'valide'])
             ->orderBy('updated_at', 'desc')
-            ->limit(30)
-            ->get();
+            ->paginate(8);
 
         return view('dashboard.operateur', compact('equipe', 'tachesAfaire', 'tachesEnCours', 'historique'));
     }

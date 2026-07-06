@@ -12,6 +12,7 @@ use App\Models\Transformation;
 use App\Models\PhaseProduction;
 use App\Models\Conditionnement;
 use App\Models\Employe;
+use App\Models\TypeConditionnement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -160,7 +161,9 @@ class OrdreProductionController extends Controller
             ]);
 
             // QR code
-            $showUrl = route('ordre-productions.show', $op);
+            $baseUrl = config('app.qr_url') ?: request()->getSchemeAndHttpHost();
+            $showUrl = rtrim($baseUrl, '/') . route('ordre-productions.show', $op, false);
+
             $op->update(['qr_code_path' =>
                 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($showUrl)
             ]);
@@ -234,12 +237,17 @@ class OrdreProductionController extends Controller
             'conditionnement.equipe',
         ]);
 
-        $equipes         = Equipe::orderBy('nom')->get();
-        $transformations = Transformation::orderBy('designation')->get();
-        $machines        = Machine::where('etat', 'en_marche')->orderBy('designation')->get();
-        $produitsSemiFinis = ProduitSemiFini::orderBy('designation')->get();
+        $equipes               = Equipe::orderBy('nom')->get();
+        $transformations       = Transformation::orderBy('designation')->get();
+        $machines              = Machine::where('etat', 'en_marche')->orderBy('designation')->get();
+        $produitsSemiFinis     = ProduitSemiFini::orderBy('designation')->get();
+        $typesConditionnement  = TypeConditionnement::orderBy('libelle')->get();
+        $quantiteMpConsommee   = $op->quantite_mp_injectee ?? 0;
+        $quantitePfProduite    = !empty($op->quantite_pf_estimee)
+            ? $op->quantite_pf_estimee
+            : (!empty($op->quantite_pf_cible) ? $op->quantite_pf_cible : 0);
 
-        return view('ordre-productions.show', compact('op', 'equipes', 'transformations', 'machines', 'produitsSemiFinis'));
+        return view('ordre-productions.show', compact('op', 'equipes', 'transformations', 'machines', 'produitsSemiFinis', 'typesConditionnement', 'quantiteMpConsommee', 'quantitePfProduite'));
     }
 
     public function addTransformation(Request $request, OrdreProduction $ordreProduction)
@@ -377,7 +385,7 @@ class OrdreProductionController extends Controller
     {
         $request->validate([
             'equipe_id'             => 'required|exists:equipes,id',
-            'type_emballage'        => 'required|string|max:255',
+            'type_emballage'        => 'required|string|max:255|exists:types_conditionnement,libelle',
             'quantite_produite'     => 'required|numeric|min:0.01',
             'quantite_mp_consommee' => 'required|numeric|min:0.01',
             'date_fabrication'      => 'required|date',

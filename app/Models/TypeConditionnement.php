@@ -10,7 +10,7 @@ class TypeConditionnement extends Model
     use HasUuid;
     protected $table = 'types_conditionnement';
 
-    protected $fillable = ['code', 'libelle', 'description', 'unite'];
+    protected $fillable = ['code', 'libelle', 'description', 'unite', 'quantite_par_unite'];
 
     protected static function booted(): void
     {

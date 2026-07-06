@@ -66,7 +66,7 @@
 
         <!-- Footer Creds on Left -->
         <div class="absolute bottom-6 left-12 right-12 z-10 flex justify-between text-emerald-200/50 text-xs">
-            <span>&copy; {{ date('Y') }} AgroProd</span>
+            <span>&copy; {{ date('Y') }} ARLEI</span>
             <span>Version 2.0</span>
         </div>
     </div>
@@ -179,7 +179,7 @@
 
         <!-- Footer Creds on Mobile -->
         <div class="lg:hidden text-center text-slate-400 text-xs mt-12">
-            <p>&copy; {{ date('Y') }} AgroProd. Tous droits réservés.</p>
+            <p>&copy; {{ date('Y') }} ARLEI. Tous droits réservés.</p>
         </div>
     </div>
 </div>

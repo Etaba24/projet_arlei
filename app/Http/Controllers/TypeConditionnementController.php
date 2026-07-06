@@ -31,14 +31,15 @@ class TypeConditionnementController extends Controller
         ]);
 
         $request->validate([
-            'libelle'     => 'required|string|max:100|unique:types_conditionnement,libelle',
-            'description' => 'nullable|string|max:255',
-            'unite'       => 'nullable|string|max:30',
+            'libelle'             => 'required|string|max:100|unique:types_conditionnement,libelle',
+            'description'         => 'nullable|string|max:255',
+            'unite'               => 'nullable|string|max:30',
+            'quantite_par_unite'  => 'nullable|numeric|min:0.0001',
         ], [
             'libelle.unique' => 'Ce type de conditionnement existe déjà.',
         ]);
 
-        TypeConditionnement::create($request->only(['libelle', 'description', 'unite']));
+        TypeConditionnement::create($request->only(['libelle', 'description', 'unite', 'quantite_par_unite']));
 
         return redirect()->route('conditionnements.index')
             ->with('status', 'Type de conditionnement créé avec succès.');
@@ -54,12 +55,13 @@ class TypeConditionnementController extends Controller
 
         $request->merge(['libelle' => $libelle]);
         $request->validate([
-            'libelle'     => 'required|string|max:100',
-            'description' => 'nullable|string|max:255',
-            'unite'       => 'nullable|string|max:30',
+            'libelle'             => 'required|string|max:100',
+            'description'         => 'nullable|string|max:255',
+            'unite'               => 'nullable|string|max:30',
+            'quantite_par_unite'  => 'nullable|numeric|min:0.0001',
         ]);
 
-        $conditionnement->update($request->only(['libelle', 'description', 'unite']));
+        $conditionnement->update($request->only(['libelle', 'description', 'unite', 'quantite_par_unite']));
 
         return redirect()->route('conditionnements.index')
             ->with('status', 'Type de conditionnement mis à jour.');

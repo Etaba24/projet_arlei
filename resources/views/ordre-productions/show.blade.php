@@ -721,24 +721,38 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Type d'emballage <span class="text-rose-500">*</span></label>
-                                <input type="text" name="type_emballage" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" placeholder="Ex: Sachet kraft 500g" />
+                                <select name="type_emballage" id="type_emballage" data-pf-unite="{{ $op->produitFini?->unite_mesure ?? 'unité' }}" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm">
+                                    <option value="">Sélectionnez un type d'emballage</option>
+                                    @foreach ($typesConditionnement as $type)
+                                        <option value="{{ $type->libelle }}" data-quantite-par-unite="{{ $type->quantite_par_unite ?? '' }}" data-unite="{{ $type->unite ?? '' }}" {{ old('type_emballage') == $type->libelle ? 'selected' : '' }}>
+                                            {{ $type->libelle }}
+                                            @if($type->unite) ({{ $type->unite }}) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Quantité PF produite <span class="text-rose-500">*</span></label>
-                                <input type="number" step="0.01" name="quantite_produite" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" placeholder="Ex: 180" />
+                                <input type="number" step="0.01" name="quantite_produite" required readonly class="w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" value="{{ old('quantite_produite', number_format($quantitePfProduite, 2, '.', '')) }}" />
+                                <p class="mt-1 text-xs text-slate-500">Récupérée depuis l’objectif de production de l’OP.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Quantité MP consommée <span class="text-rose-500">*</span></label>
-                                <input type="number" step="0.01" name="quantite_mp_consommee" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" placeholder="Ex: 500" />
+                                <input type="number" step="0.01" name="quantite_mp_consommee" required readonly class="w-full rounded-xl border-slate-200 bg-slate-50 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" value="{{ old('quantite_mp_consommee', number_format($quantiteMpConsommee, 2, '.', '')) }}" />
+                                <p class="mt-1 text-xs text-slate-500">Récupérée depuis l’entrée de matière de l’OP.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Date de fabrication <span class="text-rose-500">*</span></label>
-                                <input type="date" name="date_fabrication" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" />
+                                <input type="date" name="date_fabrication" required value="{{ old('date_fabrication', optional($op->date_debut)->format('Y-m-d')) }}" class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" />
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">Date de péremption <span class="text-rose-500">*</span></label>
                                 <input type="date" name="date_peremption" required class="w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-sm" />
                             </div>
+                        </div>
+                        <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700">
+                            <div class="font-semibold mb-1">Calcul du nombre de contenants</div>
+                            <p id="conditionnement-summary" class="text-sm">Sélectionnez un type d’emballage pour voir le nombre de contenants estimé.</p>
                         </div>
                         <div class="flex justify-end pt-2">
                             <button type="submit" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm shadow-emerald-600/20 transition-colors">
@@ -746,6 +760,36 @@
                             </button>
                         </div>
                     </form>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const select = document.getElementById('type_emballage');
+                            const summary = document.getElementById('conditionnement-summary');
+                            const pfInput = document.querySelector('input[name="quantite_produite"]');
+
+                            function updateSummary() {
+                                if (!select || !summary || !pfInput) return;
+
+                                const selected = select.options[select.selectedIndex];
+                                const qtyPerUnit = parseFloat(selected?.getAttribute('data-quantite-par-unite') || '');
+                                const unitLabel = selected?.getAttribute('data-unite') || '';
+                                const pfUnitLabel = select.getAttribute('data-pf-unite') || 'unité';
+                                const totalPf = parseFloat(pfInput.value || '0');
+
+                                if (!selected || !selected.value || !Number.isFinite(qtyPerUnit) || qtyPerUnit <= 0 || !Number.isFinite(totalPf) || totalPf <= 0) {
+                                    summary.textContent = 'Sélectionnez un type d’emballage pour voir le nombre de contenants estimé.';
+                                    return;
+                                }
+
+                                const count = Math.ceil(totalPf / qtyPerUnit);
+                                summary.innerHTML = `Pour <strong>${totalPf.toLocaleString('fr-FR')} ${pfUnitLabel}</strong> de produit et <strong>${qtyPerUnit.toLocaleString('fr-FR')} ${unitLabel || 'unité'}</strong> par contenant, il faut environ <strong>${count}</strong> contenant(s).`;
+                            }
+
+                            select?.addEventListener('change', updateSummary);
+                            pfInput?.addEventListener('input', updateSummary);
+                            updateSummary();
+                        });
+                    </script>
 
                 @else
                     {{-- Conditionnement verrouillé --}}

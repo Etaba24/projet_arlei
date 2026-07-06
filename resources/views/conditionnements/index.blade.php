@@ -47,6 +47,7 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Code</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Libellé</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Unité associée</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Qté / unité</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                         </tr>
@@ -57,6 +58,7 @@
                                 <td class="px-6 py-4 font-mono text-xs font-bold text-slate-400">{{ $type->code }}</td>
                                 <td class="px-6 py-4 font-semibold text-slate-900">{{ $type->libelle }}</td>
                                 <td class="px-6 py-4 font-medium text-slate-500">{{ $type->unite ?? '—' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-500">{{ $type->quantite_par_unite ? number_format($type->quantite_par_unite, 2) : '—' }}</td>
                                 <td class="px-6 py-4 text-slate-500 max-w-xs truncate">{{ $type->description ?? '—' }}</td>
                                 <td class="px-6 py-4 text-right">
                                     <label for="edit-toggle-{{ $type->id }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors">
@@ -96,6 +98,10 @@
                                                         <div>
                                                             <label class="block text-sm font-bold text-slate-700 mb-2">Unité associée (Optionnel)</label>
                                                             <input type="text" name="unite" placeholder="ex: Kg, Litre, Pièce" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ $type->unite }}" />
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-bold text-slate-700 mb-2">Quantité par unité (Optionnel)</label>
+                                                            <input type="number" step="0.01" min="0.0001" name="quantite_par_unite" placeholder="ex: 0.5" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ $type->quantite_par_unite }}" />
                                                         </div>
                                                         <div>
                                                             <label class="block text-sm font-bold text-slate-700 mb-2">Description</label>
@@ -157,6 +163,10 @@
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">Unité associée (Optionnel)</label>
                                 <input type="text" name="unite" placeholder="ex: Kg, Litre, Pièce" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ old('unite') }}" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Quantité par unité (Optionnel)</label>
+                                <input type="number" step="0.01" min="0.0001" name="quantite_par_unite" placeholder="ex: 0.5" class="w-full rounded-2xl border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all" value="{{ old('quantite_par_unite') }}" />
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-2">Description</label>

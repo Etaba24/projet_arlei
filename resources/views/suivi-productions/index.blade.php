@@ -81,7 +81,7 @@
         <!-- Productions ACTIVES -->
         <div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-slate-200 px-6 py-4">
-                <h2 class="text-xl font-bold text-slate-900">🚀 Productions en Cours</h2>
+                <h2 class="text-xl font-bold text-slate-900">Productions en Cours</h2>
             </div>
 
             @if ($opsActives->isNotEmpty())
@@ -171,7 +171,7 @@
         <!-- Productions CLÔTURÉES (Historique) -->
         <div class="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200 px-6 py-4">
-                <h2 class="text-xl font-bold text-slate-900">✓ Productions Clôturées (Dernières 7)</h2>
+                <h2 class="text-xl font-bold text-slate-900">Productions Clôturées</h2>
             </div>
 
             @if ($opsTerminees->isNotEmpty())
